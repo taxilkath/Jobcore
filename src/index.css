@@ -1,0 +1,582 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Light mode colors */
+  --bg-primary: #F9FAFB;
+  --bg-surface: #FFFFFF;
+  --border-primary: #E5E7EB;
+  --text-primary: #1F2937;
+  --text-secondary: #6B7280;
+  --accent-color: #2DD4BF;
+  
+  /* Shadows */
+  --shadow-soft: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px 0 rgb(0 0 0 / 0.06);
+  --shadow-medium: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -1px rgb(0 0 0 / 0.06);
+  --shadow-large: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05);
+}
+
+.dark {
+  /* Dark mode - Pro Theme */
+  --bg-primary: #111827;      /* Very dark charcoal background */
+  --bg-surface: #1F2937;      /* Clean dark gray for cards/modals */
+  --border-primary: #374151;  /* Subtle lighter gray borders */
+  --text-primary: #E5E7EB;    /* Soft, easy-to-read off-white */
+  --text-secondary: #9CA3AF;  /* Muted gray for secondary text */
+  --accent-color: #2DD4BF;    /* Single vibrant teal accent */
+  
+  /* Dark mode shadows become subtle glows */
+  --shadow-soft: 0 0 0 1px rgba(55, 65, 81, 0.5);
+  --shadow-medium: 0 0 0 1px rgba(55, 65, 81, 0.7), 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  --shadow-large: 0 0 0 1px rgba(55, 65, 81, 0.9), 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+}
+
+* {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Base component styles */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Card/Surface styles */
+.pro-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-primary);
+  box-shadow: var(--shadow-soft);
+  transition: all 0.3s ease;
+}
+
+.pro-card:hover {
+  box-shadow: var(--shadow-medium);
+}
+
+/* Modern Button Styles - Enhanced */
+.btn-primary {
+  background: linear-gradient(135deg, #2DD4BF 0%, #06B6D4 100%);
+  color: #FFFFFF;
+  border: none;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  border-radius: 12px;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  letter-spacing: -0.01em;
+  box-shadow: 0 4px 16px rgba(45, 212, 191, 0.25);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(45, 212, 191, 0.4);
+  background: linear-gradient(135deg, #14B8A6 0%, #0891B2 100%);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: #2DD4BF;
+  border: 1px solid rgba(45, 212, 191, 0.3);
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border-radius: 12px;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+.btn-secondary:hover {
+  background: rgba(45, 212, 191, 0.1);
+  border-color: #2DD4BF;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(45, 212, 191, 0.2);
+}
+
+.light .btn-secondary {
+  background: rgba(0, 0, 0, 0.05);
+  color: #059669;
+  border: 1px solid rgba(5, 150, 105, 0.3);
+}
+
+.light .btn-secondary:hover {
+  background: rgba(5, 150, 105, 0.1);
+  border-color: #059669;
+}
+
+/* Input styles */
+.pro-input {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+}
+
+.pro-input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.1);
+}
+
+.pro-input::placeholder {
+  color: var(--text-secondary);
+}
+
+/* Navigation active state - NO GRADIENTS */
+.nav-active {
+  color: var(--accent-color) !important;
+  border-left: 2px solid var(--accent-color);
+  background-color: rgba(45, 212, 191, 0.05);
+  font-weight: 600;
+}
+
+/* Tab styles - NO GRADIENTS */
+.tab-active {
+  color: var(--accent-color);
+  border-bottom: 2px solid var(--accent-color);
+  font-weight: 600;
+}
+
+.tab-inactive {
+  color: var(--text-secondary);
+  border-bottom: 2px solid transparent;
+}
+
+.tab-inactive:hover {
+  color: var(--text-primary);
+}
+
+/* UNIFIED SURFACE DRAWER - Modern Redesign */
+.unified-drawer {
+  /* Sophisticated dark theme with better contrast */
+  background: linear-gradient(135deg, #1A1A1A 0%, #1F1F1F 100%);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  
+  /* Reduced internal padding for more content */
+  padding: 24px;
+  padding-top: 24px;
+  
+  /* Subtle shadow for depth */
+  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.3);
+}
+
+/* Light Mode - Clean and minimal */
+.light .unified-drawer {
+  background: linear-gradient(135deg, #FAFAFA 0%, #FFFFFF 100%);
+  border-left: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.1);
+}
+
+/* Drawer Header - Enhanced hierarchy */
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 8px;
+}
+
+.light .drawer-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.drawer-title {
+  flex: 1;
+  margin-right: 24px;
+  color: var(--text-primary);
+}
+
+.drawer-title h1 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin: 0 0 8px 0;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.light .drawer-title h1 {
+  color: #1A1A1A;
+}
+
+.drawer-title p {
+  font-size: 1.125rem;
+  color: #A1A1AA;
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.light .drawer-title p {
+  color: #52525B;
+}
+
+/* Modern Section Headers */
+.section-header {
+  display: flex;
+  align-items: center;
+  color: #71717A;
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 16px;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.light .section-header {
+  color: #52525B;
+}
+
+.section-header svg {
+  margin-right: 10px;
+  width: 16px;
+  height: 16px;
+  color: #2DD4BF;
+}
+
+/* Enhanced Section Spacing */
+.drawer-section {
+  margin-bottom: 28px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+}
+
+.light .drawer-section {
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.drawer-section:last-child {
+  margin-bottom: 24px;
+}
+
+/* Modern Ghost Pills */
+.ghost-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+.light .ghost-pill {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.ghost-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Enhanced AI Tailored Badge */
+.ghost-pill-ai-tailored {
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+  border: 1px solid rgba(45, 212, 191, 0.3);
+  color: #2DD4BF;
+  font-weight: 700;
+}
+
+/* Modern Close Button */
+.drawer-close-button {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  color: #71717A;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+}
+
+.drawer-close-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #FFFFFF;
+  transform: scale(1.05);
+}
+
+.light .drawer-close-button {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #52525B;
+}
+
+.light .drawer-close-button:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #1A1A1A;
+}
+
+/* Enhanced Bulleted Lists */
+.accent-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.accent-list li {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  color: #D4D4D8;
+  line-height: 1.5;
+  font-size: 0.95rem;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.light .accent-list li {
+  color: #3F3F46;
+}
+
+.accent-list li:before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: linear-gradient(135deg, #2DD4BF 0%, #06B6D4 100%);
+  border-radius: 50%;
+  margin-right: 12px;
+  margin-top: 6px;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px rgba(45, 212, 191, 0.3);
+}
+
+/* Resume Row - Clean, Single Line Layout */
+.resume-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+}
+
+.resume-icon {
+  width: 24px;
+  height: 24px;
+  color: #EF4444;
+  flex-shrink: 0;
+}
+
+.resume-filename {
+  flex: 1;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* Download Link - Simple Text Link */
+.download-link {
+  display: inline-flex;
+  align-items: center;
+  color: var(--accent-color);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: opacity 0.3s ease;
+}
+
+.download-link:hover {
+  opacity: 0.8;
+}
+
+.download-link svg {
+  margin-left: 4px;
+  width: 14px;
+  height: 14px;
+}
+
+/* Accent color utilities */
+.text-accent {
+  color: var(--accent-color);
+}
+
+.border-accent {
+  border-color: var(--accent-color);
+}
+
+.bg-accent {
+  background-color: var(--accent-color);
+}
+
+/* Clean scrollbar */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-primary) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--border-primary);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--accent-color);
+}
+
+/* Smooth transitions */
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* Company logo styles */
+.company-logo {
+  border-radius: 8px;
+  box-shadow: var(--shadow-soft);
+}
+
+/* Focus states for accessibility */
+*:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+/* Gradient text - ONLY for special headings */
+.gradient-text {
+  background: linear-gradient(135deg, var(--accent-color) 0%, #3B82F6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Animation utilities */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+/* Marquee animation */
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Enhanced Job Description Text */
+.job-description-text {
+  color: #D4D4D8;
+  line-height: 1.6;
+  font-size: 0.95rem;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+.light .job-description-text {
+  color: #3F3F46;
+}
+
+/* Status-specific Ghost Pills - Enhanced */
+.ghost-pill-location {
+  background: rgba(156, 163, 175, 0.1);
+  border: 1px solid rgba(156, 163, 175, 0.3);
+  color: #9CA3AF;
+}
+
+.ghost-pill-salary {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #10B981;
+}
+
+.ghost-pill-type {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #3B82F6;
+}
+
+.ghost-pill-date {
+  background: rgba(107, 114, 128, 0.1);
+  border: 1px solid rgba(107, 114, 128, 0.3);
+  color: #6B7280;
+}
+
+/* Bookmark button enhancements */
+.bookmark-button {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.bookmark-button:hover {
+  transform: scale(1.05);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.bookmark-button.bookmarked {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%);
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  color: #FBB436;
+}
+
+/* Company information styling */
+.company-info {
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.light .company-info {
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Skill tags enhanced styling */
+.skill-tag {
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+  border: 1px solid rgba(45, 212, 191, 0.2);
+  color: #2DD4BF;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.skill-tag:hover {
+  transform: translateY(-1px);
+  border-color: #2DD4BF;
+  box-shadow: 0 4px 8px rgba(45, 212, 191, 0.2);
+}
