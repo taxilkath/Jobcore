@@ -9,6 +9,33 @@ export default {
       },
       colors: {
         // Pro Theme Color Palette
+        emerald: {
+          50: '#ecfdf5',
+          100: '#d1fae5',
+          200: '#a7f3d0',
+          300: '#6ee7b7',
+          400: '#34d399',
+          500: '#10b981',
+          600: '#059669',
+          700: '#047857',
+          800: '#065f46',
+          900: '#064e3b',
+        },
+        sky: {
+          50: '#f0f9ff',
+          100: '#e0f2fe',
+          200: '#bae6fd',
+          300: '#7dd3fc',
+          400: '#38bdf8',
+          500: '#0ea5e9',
+          600: '#0284c7',
+          700: '#0369a1',
+          800: '#075985',
+          900: '#0c4a6e',
+        },
+        success: '#22C55E',
+        warning: '#F97316',
+        danger: '#EF4444',
         slate: {
           50: '#f8fafc',
           100: '#f1f5f9',
@@ -75,10 +102,22 @@ export default {
         '18': '4.5rem',
         '88': '22rem',
       },
+      transitionDuration: {
+        '2000': '2000ms',
+        '4000': '4000ms',
+      },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-out',
         'slide-in': 'slideIn 0.3s ease-out',
         'marquee': 'marquee 30s linear infinite',
+        'spin-slow': 'spin 5s linear infinite',
+        'spin-reverse': 'spin-reverse 1s linear infinite',
+        'tilt': 'tilt 10s infinite linear',
+        'star-movement-bottom': 'star-movement-bottom linear infinite alternate',
+        'star-movement-top': 'star-movement-top linear infinite alternate',
+        'sidebar-slide-in': 'sidebar-slide-in 0.3s ease-out',
+        'flip': 'flip 6s infinite steps(2, end)',
+        'rotate': 'rotate 3s linear infinite both',
       },
       keyframes: {
         fadeIn: {
@@ -92,6 +131,32 @@ export default {
         marquee: {
           '0%': { transform: 'translateX(0)' },
           '100%': { transform: 'translateX(-50%)' },
+        },
+        tilt: {
+            '0%, 100%': { transform: 'rotate(0deg)' },
+            '50%': { transform: 'rotate(1deg)' },
+        },
+        'star-movement-bottom': {
+          '0%': { transform: 'translate(0%, 0%)', opacity: '1' },
+          '100%': { transform: 'translate(-100%, 0%)', opacity: '0' },
+        },
+        'star-movement-top': {
+          '0%': { transform: 'translate(0%, 0%)', opacity: '1' },
+          '100%': { transform: 'translate(100%, 0%)', opacity: '0' },
+        },
+        'sidebar-slide-in': {
+          '0%': { transform: 'translateX(-20px)', opacity: 0 },
+          '100%': { transform: 'translateX(0)', opacity: 1 },
+        },
+        'flip': {
+          'to': { transform: 'rotate(360deg)' },
+        },
+        'rotate': {
+          'to': { transform: 'rotate(90deg)' },
+        },
+        'spin-reverse': {
+          'from': { transform: 'rotate(360deg)' },
+          'to': { transform: 'rotate(0deg)' },
         },
       },
       backdropBlur: {

@@ -17,6 +17,26 @@
   --shadow-soft: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px 0 rgb(0 0 0 / 0.06);
   --shadow-medium: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -1px rgb(0 0 0 / 0.06);
   --shadow-large: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05);
+  
+  /* Shadcn/UI Variables */
+  --background: #FFFFFF;
+  --foreground: #1F2937;
+  --primary: #10B981;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F3F4F6;
+  --secondary-foreground: #1F2937;
+  --muted: #F9FAFB;
+  --muted-foreground: #6B7280;
+  --accent: #F3F4F6;
+  --accent-foreground: #1F2937;
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --border: #E5E7EB;
+  --input: #E5E7EB;
+  --ring: #10B981;
+  --radius: 0.5rem;
+  --success: 142.1 70.6% 45.3%;
+  --success-foreground: 0 0% 100%;
 }
 
 .dark {
@@ -24,14 +44,31 @@
   --bg-primary: #111827;      /* Very dark charcoal background */
   --bg-surface: #1F2937;      /* Clean dark gray for cards/modals */
   --border-primary: #374151;  /* Subtle lighter gray borders */
-  --text-primary: #E5E7EB;    /* Soft, easy-to-read off-white */
+  --text-primary: #F9FAFB;    /* Soft, easy-to-read off-white */
   --text-secondary: #9CA3AF;  /* Muted gray for secondary text */
-  --accent-color: #2DD4BF;    /* Single vibrant teal accent */
+  --accent-color: #10B981;    /* Emerald Green */
   
   /* Dark mode shadows become subtle glows */
   --shadow-soft: 0 0 0 1px rgba(55, 65, 81, 0.5);
   --shadow-medium: 0 0 0 1px rgba(55, 65, 81, 0.7), 0 4px 6px -1px rgba(0, 0, 0, 0.3);
   --shadow-large: 0 0 0 1px rgba(55, 65, 81, 0.9), 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+  
+  /* Shadcn/UI Variables - Dark Mode */
+  --background: #111827;
+  --foreground: #F9FAFB;
+  --primary: #10B981;
+  --primary-foreground: #FFFFFF;
+  --secondary: #1F2937;
+  --secondary-foreground: #F9FAFB;
+  --muted: #1F2937;
+  --muted-foreground: #9CA3AF;
+  --accent: #1F2937;
+  --accent-foreground: #F9FAFB;
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --border: #374151;
+  --input: #374151;
+  --ring: #10B981;
 }
 
 * {
@@ -43,6 +80,28 @@ body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Allow text selection by default, but disable on interactive elements */
+body {
+  caret-color: transparent;
+}
+
+/* Enable text selection for content areas */
+input, textarea, [contenteditable="true"], [contenteditable=""], 
+p, span, div, h1, h2, h3, h4, h5, h6, li, td, th,
+.prose, .job-description-text, .drawer-section, .pro-card {
+  user-select: text;
+  caret-color: auto;
+}
+
+/* Disable selection on interactive elements */
+button, .btn-primary, .btn-secondary, 
+nav, .nav-active, a[role="button"],
+.tab-active, .tab-inactive,
+.ghost-pill, .skill-tag, .bookmark-button {
+  user-select: none;
+  caret-color: transparent;
 }
 
 /* Card/Surface styles */
@@ -59,7 +118,7 @@ body {
 
 /* Modern Button Styles - Enhanced */
 .btn-primary {
-  background: linear-gradient(135deg, #2DD4BF 0%, #06B6D4 100%);
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
   color: #FFFFFF;
   border: none;
   font-weight: 700;
@@ -67,19 +126,19 @@ body {
   border-radius: 12px;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   letter-spacing: -0.01em;
-  box-shadow: 0 4px 16px rgba(45, 212, 191, 0.25);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.25);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(45, 212, 191, 0.4);
-  background: linear-gradient(135deg, #14B8A6 0%, #0891B2 100%);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.05);
-  color: #2DD4BF;
-  border: 1px solid rgba(45, 212, 191, 0.3);
+  background: rgba(16, 185, 129, 0.05);
+  color: #10B981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
   font-weight: 600;
   transition: all 0.3s ease;
   border-radius: 12px;
@@ -88,10 +147,10 @@ body {
 }
 
 .btn-secondary:hover {
-  background: rgba(45, 212, 191, 0.1);
-  border-color: #2DD4BF;
+  background: rgba(16, 185, 129, 0.1);
+  border-color: #10B981;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(45, 212, 191, 0.2);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
 }
 
 .light .btn-secondary {
@@ -116,7 +175,7 @@ body {
 .pro-input:focus {
   outline: none;
   border-color: var(--accent-color);
-  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.1);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
 .pro-input::placeholder {
@@ -127,7 +186,7 @@ body {
 .nav-active {
   color: var(--accent-color) !important;
   border-left: 2px solid var(--accent-color);
-  background-color: rgba(45, 212, 191, 0.05);
+  background-color: rgba(16, 185, 129, 0.05);
   font-weight: 600;
 }
 
@@ -333,8 +392,8 @@ body {
 }
 
 .accent-list li {
-  display: flex;
-  align-items: flex-start;
+  position: relative;
+  padding-left: 20px;
   margin-bottom: 12px;
   color: #D4D4D8;
   line-height: 1.5;
@@ -348,13 +407,13 @@ body {
 
 .accent-list li:before {
   content: '';
+  position: absolute;
+  left: 0;
+  top: 9px;
   width: 6px;
   height: 6px;
   background: linear-gradient(135deg, #2DD4BF 0%, #06B6D4 100%);
   border-radius: 50%;
-  margin-right: 12px;
-  margin-top: 6px;
-  flex-shrink: 0;
   box-shadow: 0 0 6px rgba(45, 212, 191, 0.3);
 }
 
@@ -492,6 +551,15 @@ body {
   100% { transform: translateX(-50%); }
 }
 
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
 /* Enhanced Job Description Text */
 .job-description-text {
   color: #D4D4D8;
@@ -500,6 +568,9 @@ body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   font-weight: 400;
   letter-spacing: -0.01em;
+  min-height: 200px;
+  max-height: none !important;
+  overflow: visible !important;
 }
 
 .light .job-description-text {
@@ -579,4 +650,175 @@ body {
   transform: translateY(-1px);
   border-color: #2DD4BF;
   box-shadow: 0 4px 8px rgba(45, 212, 191, 0.2);
+}
+
+/* Focus ring modern */
+.focus-ring-modern:focus {
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2), 0 0 20px rgba(16, 185, 129, 0.1);
+}
+
+/* Cleaned HTML Content Styles */
+.prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+  color: var(--text-primary);
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.prose h1 { font-size: 1.5rem; }
+.prose h2 { font-size: 1.25rem; }
+.prose h3 { font-size: 1.125rem; }
+.prose h4 { font-size: 1rem; }
+
+.prose p {
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  line-height: 1.6;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.prose ul {
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+}
+
+.prose ul li {
+  margin-bottom: 0.5rem;
+  margin-left: 1rem;
+  line-height: 1.6;
+}
+
+.prose ul li::marker {
+  color: var(--accent-color);
+}
+
+.prose strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.prose em {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Pay transparency section styling */
+.prose .content-pay-transparency {
+  background-color: rgba(16, 185, 129, 0.05);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-top: 2rem;
+}
+
+.prose .content-pay-transparency .title {
+  color: var(--text-primary);
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.prose .content-pay-transparency .pay-range {
+  color: var(--accent-color);
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.prose .content-pay-transparency .pay-range .divider {
+  color: var(--text-secondary);
+  margin: 0 0.5rem;
+}
+
+/* Dark mode adjustments */
+.dark .prose .content-pay-transparency {
+  background-color: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+/* SmartRecruiters Job Section Styling */
+.job-section {
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.job-section:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.dark .job-section {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark .job-section:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+}
+
+/* Enhanced prose styling for job sections */
+.job-section .prose {
+  line-height: 1.7;
+  min-height: 100px;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.job-section .prose p {
+  margin-bottom: 1rem;
+}
+
+.job-section .prose p:last-child {
+  margin-bottom: 0;
+}
+
+.job-section .prose strong {
+  font-weight: 600;
+  color: inherit;
+}
+
+.job-section .prose b {
+  font-weight: 600;
+  color: inherit;
+}
+
+/* Clean up any nested spans from SmartRecruiters */
+.job-section .prose span {
+  display: inline;
+}
+
+/* Better bullet points */
+.job-section .prose ul {
+  padding-left: 1.5rem;
+  margin: 1rem 0;
+}
+
+.job-section .prose ul li {
+  margin-bottom: 0.5rem;
+  padding-left: 0.25rem;
+}
+
+.job-section .prose ul li::marker {
+  color: rgba(59, 130, 246, 0.7);
+}
+
+.dark .job-section .prose ul li::marker {
+  color: rgba(96, 165, 250, 0.7);
+}
+
+/* Ensure all prose containers are fully visible */
+.prose {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+/* Ensure drawer content sections are fully visible */
+.drawer-section .prose,
+.prose.prose-sm,
+.prose.prose-lg {
+  min-height: auto;
+  max-height: none !important;
+  overflow: visible !important;
 }
