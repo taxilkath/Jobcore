@@ -70,7 +70,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onSearch }) => {
   };
 
   return (
-    <section className="bg-gradient-to-br from-gray-50 via-white to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 py-20 lg:py-28 relative overflow-hidden transition-colors duration-300">
+    <section className="py-20 lg:py-28 relative overflow-hidden transition-colors duration-300">
       {/* Background Elements */}
       <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-blue-600/5 dark:from-emerald-500/10 dark:to-blue-600/10"></div>
       <div className="absolute top-20 left-10 w-72 h-72 bg-emerald-500/10 dark:bg-emerald-500/20 rounded-full blur-3xl"></div>
@@ -78,7 +78,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onSearch }) => {
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="text-center max-w-4xl mx-auto">
-          {/* Main Headline */}Filters
+          {/* Main Headline */}
 
           <h1 className="text-5xl lg:text-7xl font-bold text-gray-900 dark:text-white mb-6 leading-tight transition-colors duration-300">
             Every Job Board.

@@ -26,6 +26,7 @@ const JobDetailDrawer: React.FC<JobDetailDrawerProps> = ({
   const [leverDetails, setLeverDetails] = useState<any>(null);
   const [smartRecruitersDetails, setSmartRecruitersDetails] = useState<any>(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [showApplyConfirmation, setShowApplyConfirmation] = useState(false);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -214,6 +215,12 @@ const JobDetailDrawer: React.FC<JobDetailDrawerProps> = ({
     console.log('Tailored resume created:', tailoredResume);
   };
 
+  const handleApplyConfirmation = () => {
+    onApply(displayJob.id || displayJob._id);
+    setShowApplyConfirmation(false);
+    onClose();
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -322,11 +329,21 @@ const JobDetailDrawer: React.FC<JobDetailDrawerProps> = ({
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     transition={{ duration: 0.2 }}
-                    onClick={handleApplyClick}
+                    onClick={() => setShowApplyConfirmation(true)}
                     className="btn-primary px-6 py-3 rounded-xl font-bold text-base flex-1 flex items-center justify-center"
                   >
+                    <Briefcase className="h-4 w-4 mr-2" />
+                    Apply
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ duration: 0.2 }}
+                    onClick={handleApplyClick}
+                    className="btn-secondary px-6 py-3 rounded-xl font-bold text-base flex-1 flex items-center justify-center"
+                  >
                     <Brain className="h-4 w-4 mr-2" />
-                    Apply with AI Resume
+                    Apply with AI
                   </motion.button>
                   {displayJob.url && (
                     <motion.button
@@ -611,6 +628,52 @@ const JobDetailDrawer: React.FC<JobDetailDrawerProps> = ({
 
             </motion.div>
           </motion.div>
+
+          {/* Apply Confirmation Dialog */}
+          {showApplyConfirmation && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
+              onClick={() => setShowApplyConfirmation(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-md w-full shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                    <Briefcase className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">Apply to Job</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Are you sure you want to apply?</p>
+                  </div>
+                </div>
+                <p className="text-gray-700 dark:text-gray-300 mb-6">
+                  This will mark the job as applied and move it to your applied jobs section.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowApplyConfirmation(false)}
+                    className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    No, Cancel
+                  </button>
+                  <button
+                    onClick={handleApplyConfirmation}
+                    className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-colors"
+                  >
+                    Yes, Apply
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
 
           {/* AI Tailoring Studio */}
           <TailoringStudio

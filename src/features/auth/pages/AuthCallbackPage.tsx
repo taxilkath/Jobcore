@@ -13,7 +13,7 @@ const AuthCallbackPage: React.FC = () => {
   }, [session, navigate]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-slate-900">
+    <div className="flex items-center justify-center min-h-screen transition-colors duration-300">
       <div className="text-center">
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
           Authenticating...

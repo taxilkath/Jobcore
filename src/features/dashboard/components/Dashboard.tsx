@@ -1,17 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { User, FileText, Activity, Settings, Upload, Download, Star, Trash2, Edit3, Calendar, MapPin, Building, Eye, ExternalLink, Sparkles, Brain, Clock, DollarSign, X } from 'lucide-react';
-import { BorderTrail } from '../../../components/ui/border-trail';
-import { motion, AnimatePresence } from 'framer-motion';
 import Uppy from '@uppy/core';
-import Tus from '@uppy/tus';
-import Url from '@uppy/url';
-import { DashboardModal } from '@uppy/react';
-import { getSavedJobsWithDetailsFromAPI, removeSavedJobFromAPI, getAppliedJobsFromAPI, markJobAsAppliedAPI } from '../../../lib/userService';
-import JobDetailDrawer from '../../jobs/components/JobDetailDrawer';
-import { InteractiveHoverButton } from '../../../components/ui/interactive-hover-button';
 import '@uppy/core/dist/style.css';
 import '@uppy/dashboard/dist/style.css';
+import { DashboardModal } from '@uppy/react';
+import Tus from '@uppy/tus';
+import Url from '@uppy/url';
 import '@uppy/url/dist/style.css';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Activity, Building, Calendar, DollarSign, ExternalLink, FileText, MapPin, Menu, Settings, Sparkles, Star, Trash2, Upload, User, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { toast } from 'sonner'; // For user feedback
+import { BorderTrail } from '../../../components/ui/border-trail';
+import { ConfirmModal } from '../../../components/ui/ConfirmModal';
+import { InteractiveHoverButton } from '../../../components/ui/interactive-hover-button';
+import { useAuth } from '../../../contexts/AuthContext'; // We'll need the user context
+import { getAppliedJobsFromAPI, getSavedJobsWithDetailsFromAPI, markJobAsAppliedAPI, removeSavedJobFromAPI } from '../../../lib/userService';
+import { ResumeCard } from '../../home/components/ResumeCard';
+import JobDetailDrawer from '../../jobs/components/JobDetailDrawer';
+import { PDFViewerModal } from '../../../components/ui/PDFViewerModal';
 
 interface DashboardProps {
   onNavigateHome: () => void;
@@ -22,11 +27,11 @@ const uppy = new Uppy({
   restrictions: { maxNumberOfFiles: 1, allowedFileTypes: ['.pdf', '.doc', '.docx'] },
   autoProceed: true,
 })
-.use(Tus, { endpoint: 'https://tusd.tusdemo.net/files/' })
-.use(Url, { companionUrl: 'https://companion.uppy.io/' });
+  .use(Tus, { endpoint: 'https://tusd.tusdemo.net/files/' })
+  .use(Url, { companionUrl: 'https://companion.uppy.io/' });
 
 const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
-  const [activeSection, setActiveSection] = useState('activity');
+  const [activeSection, setActiveSection] = useState('resumes'); // Start on the resumes tab
   const [activeTab, setActiveTab] = useState<'applied' | 'saved'>('applied');
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -37,28 +42,80 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
   const [loadingAppliedJobs, setLoadingAppliedJobs] = useState(false);
   const [selectedSavedJob, setSelectedSavedJob] = useState<any>(null);
   const [isJobDrawerOpen, setIsJobDrawerOpen] = useState(false);
-  
-  const [resumes, setResumes] = useState([
-    {
-      id: '1',
-      name: 'Software Engineer Resume - 2024',
-      uploadDate: '2024-01-15',
-      fileSize: '245 KB',
-      isDefault: true,
-      type: 'pdf'
-    },
-    {
-      id: '2',
-      name: 'Frontend Developer Resume',
-      uploadDate: '2024-01-10',
-      fileSize: '198 KB',
-      isDefault: false,
-      type: 'pdf'
-    }
-  ]);
+  // --- New state for the delete confirmation modal ---
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [resumeToDelete, setResumeToDelete] = useState<string | null>(null);
+  // --- New state for the PDF viewer modal ---
+  const [isPdfViewerOpen, setPdfViewerOpen] = useState(false);
+  const [pdfToView, setPdfToView] = useState<string | null>(null);
+  // Mobile sidebar state
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Fetch saved jobs from API
+  const { user } = useAuth(); // Get user from your AuthContext
+
+  // State to hold your resumes. We will fetch these from the backend later.
+  // For now, we start with an empty array.
+  const [resumes, setResumes] = useState<any[]>([]);
+  const [loadingResumes, setLoadingResumes] = useState(true);
+
+  // Uppy instance managed by React state
+  const [uppy] = useState(() => new Uppy({
+    meta: { type: 'resume' },
+    restrictions: { maxNumberOfFiles: 1, allowedFileTypes: ['.pdf', '.doc', '.docx'] },
+    autoProceed: false, // Important: We handle the upload manually
+  }));
+
+  // New useEffect for handling the Vercel Blob upload process
   useEffect(() => {
+    const handleFileAdded = async (file: any) => {
+      if (!user) {
+        toast.error('You must be logged in to upload a resume.');
+        uppy.removeFile(file.id);
+        return;
+      }
+
+      const formData = new FormData();
+      // The key 'resume' should match what multer expects, but `upload.any()` is flexible.
+      formData.append('resume', file.data);
+      formData.append('userId', user.id);
+
+      try {
+        // Remove the incorrect setFileState call for progress
+        // uppy.setFileState(file.id, { progress: { uploadStarted: Date.now() } });
+
+        // Send the file directly to your backend in a single request.
+        const response = await fetch('/api/resumes/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Upload failed');
+        }
+
+        const result = await response.json();
+
+        toast.success(result.message);
+        setResumes(prev => [result.resume, ...prev]);
+        setUploadModalOpen(false);
+        uppy.clear(); // Use clear() instead of reset()
+
+      } catch (error: any) {
+        toast.error(error.message || 'An error occurred during upload.');
+        uppy.setFileState(file.id, { error: error.message });
+      }
+    };
+
+    uppy.on('file-added', handleFileAdded);
+
+    return () => {
+      uppy.off('file-added', handleFileAdded);
+    };
+  }, [uppy, user]); // Dependencies
+  
+   // Fetch saved jobs from API
+   useEffect(() => {
     const fetchSavedJobs = async () => {
       setLoadingSavedJobs(true);
       try {
@@ -93,16 +150,94 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
     fetchAppliedJobs();
   }, []);
 
+  // --- This is a new function to fetch existing resumes ---
+  const fetchResumes = async () => {
+    if (!user) return;
+    setLoadingResumes(true);
+    try {
+      // We will create this API endpoint next
+      const response = await fetch(`/api/resumes/user/${user.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setResumes(data.resumes || []);
+      } else {
+        setResumes([]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch resumes:", error);
+      setResumes([]);
+    } finally {
+      setLoadingResumes(false);
+    }
+  };
+
+  // Fetch resumes when the component mounts or the user changes
+  useEffect(() => {
+    fetchResumes();
+  }, [user]);
+  // --- End of Changes ---
+
+  // --- New handler functions for resume actions ---
+  const handleViewResume = (filePath: string) => {
+    setPdfToView(filePath);
+    setPdfViewerOpen(true);
+  };
+
+  const handleDownloadResume = (filePath: string) => {
+    const link = document.createElement('a');
+    link.href = filePath;
+    link.setAttribute('download', '');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleDeleteRequest = (resumeId: string) => {
+    setResumeToDelete(resumeId);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!resumeToDelete || !user) {
+      toast.error("Could not delete resume. Required information is missing.");
+      return;
+    }
+
+    try {
+      // Call your backend DELETE endpoint
+      const response = await fetch(`/api/resumes/user/${user.id}/resume/${resumeToDelete}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete resume.');
+      }
+
+      // If successful, update the UI optimistically
+      setResumes(prev => prev.filter(r => r._id !== resumeToDelete));
+      toast.success('Resume deleted successfully.');
+
+    } catch (error: any) {
+      toast.error(error.message || 'An error occurred during deletion.');
+    } finally {
+      // Close the modal and reset state
+      setDeleteModalOpen(false);
+      setResumeToDelete(null);
+    }
+  };
+
+
   const handleResumeAction = (action: string, resumeId: string) => {
     switch (action) {
       case 'setDefault':
         setResumes(prev => prev.map(resume => ({
           ...resume,
-          isDefault: resume.id === resumeId
+          isDefault: resume._id === resumeId // Assuming _id is the correct field for updating
         })));
         break;
       case 'delete':
-        setResumes(prev => prev.filter(resume => resume.id !== resumeId));
+        setResumes(prev => prev.filter(resume => resume._id !== resumeId)); // Assuming _id is the correct field for deleting
         break;
       case 'download':
         console.log('Downloading resume:', resumeId);
@@ -153,20 +288,20 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
     const savedJob = savedJobs.find(job => job.jobId === jobId);
     if (savedJob) {
       // Try multiple possible application URL fields
-      const applyUrl = savedJob.applicationUrl || 
-                      savedJob.apply_url || 
-                      savedJob.applyUrl;
-      
+      const applyUrl = savedJob.applicationUrl ||
+        savedJob.apply_url ||
+        savedJob.applyUrl;
+
       if (applyUrl) {
         window.open(applyUrl, '_blank', 'noopener,noreferrer');
-        
+
         try {
           // Mark job as applied in the database
           await markJobAsAppliedAPI(jobId);
-          
+
           // Remove from saved jobs list
           setSavedJobs(prev => prev.filter(job => job.jobId !== jobId));
-          
+
           // Refresh applied jobs list
           const updatedAppliedJobs = await getAppliedJobsFromAPI();
           setAppliedJobs(updatedAppliedJobs);
@@ -214,39 +349,39 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
     <div className="space-y-8">
       {/* Welcome Section */}
       <div className="pro-card rounded-3xl p-8">
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4">
           Welcome back! 👋
         </h2>
-        <p className="text-gray-600 dark:text-slate-300 text-lg mb-6">
+        <p className="text-gray-600 dark:text-slate-300 text-base sm:text-lg mb-6">
           Here's what's happening with your job search
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="pro-card rounded-2xl p-6 text-center">
-            <div className="text-3xl font-bold text-accent mb-2">{savedJobs.length}</div>
-            <div className="text-gray-600 dark:text-slate-400 font-medium">Saved Jobs</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="pro-card rounded-2xl p-4 sm:p-6 text-center">
+            <div className="text-2xl sm:text-3xl font-bold text-accent mb-2">{savedJobs.length}</div>
+            <div className="text-gray-600 dark:text-slate-400 font-medium text-sm sm:text-base">Saved Jobs</div>
           </div>
-          <div className="pro-card rounded-2xl p-6 text-center">
-            <div className="text-3xl font-bold text-accent mb-2">{appliedJobs.length}</div>
-            <div className="text-gray-600 dark:text-slate-400 font-medium">Applications</div>
+          <div className="pro-card rounded-2xl p-4 sm:p-6 text-center">
+            <div className="text-2xl sm:text-3xl font-bold text-accent mb-2">{appliedJobs.length}</div>
+            <div className="text-gray-600 dark:text-slate-400 font-medium text-sm sm:text-base">Applications</div>
           </div>
-          <div className="pro-card rounded-2xl p-6 text-center">
-            <div className="text-3xl font-bold text-accent mb-2">{resumes.length}</div>
-            <div className="text-gray-600 dark:text-slate-400 font-medium">Resumes</div>
+          <div className="pro-card rounded-2xl p-4 sm:p-6 text-center">
+            <div className="text-2xl sm:text-3xl font-bold text-accent mb-2">{resumes.length}</div>
+            <div className="text-gray-600 dark:text-slate-400 font-medium text-sm sm:text-base">Resumes</div>
           </div>
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="pro-card rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Recent Activity</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <div className="pro-card rounded-2xl p-4 sm:p-6">
+          <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4">Recent Activity</h3>
           <div className="space-y-4">
             {appliedJobs.slice(0, 2).map((job) => (
               <div key={job.id} className="flex items-center space-x-3">
-                <img src={job.logo} alt={job.company} className="company-logo w-10 h-10 rounded-lg object-cover" />
+              <img src={job.logo} alt={job.company?.name || job.company} className="company-logo w-10 h-10 rounded-lg object-cover" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{job.title}</p>
-                  <p className="text-xs text-gray-500 dark:text-slate-400">{job.company} • {job.appliedDate}</p>
+                <p className="text-xs text-gray-500 dark:text-slate-400">{job.company?.name || job.company} • {job.appliedDate}</p>
                 </div>
                 <span className={`ghost-pill text-xs ${getStatusColor(job.status)}`}>
                   {job.status}
@@ -256,15 +391,15 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
           </div>
         </div>
 
-        <div className="pro-card rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Saved Jobs</h3>
+        <div className="pro-card rounded-2xl p-4 sm:p-6">
+          <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4">Saved Jobs</h3>
           <div className="space-y-4">
             {savedJobs.slice(0, 2).map((job) => (
               <div key={job.id} className="flex items-center space-x-3">
-                <img src={job.logo} alt={job.company} className="company-logo w-10 h-10 rounded-lg object-cover" />
+              <img src={job.logo} alt={job.company?.name || job.companyName} className="company-logo w-10 h-10 rounded-lg object-cover" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{job.title}</p>
-                  <p className="text-xs text-gray-500 dark:text-slate-400">{job.company} • {job.salary}</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{job.title || job.jobTitle}</p>
+                <p className="text-xs text-gray-500 dark:text-slate-400">{job.company?.name || job.companyName} • {job.salary}</p>
                 </div>
                 <button className="text-accent hover:text-accent/80 transition-colors">
                   <ExternalLink className="h-4 w-4" />
@@ -277,13 +412,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
     </div>
   );
 
+  // --- Update your renderResumes function ---
   const renderResumes = () => (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">My Resumes</h2>
-          <p className="text-gray-600 dark:text-slate-400">Manage your resume collection</p>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">My Resumes</h2>
+          <p className="text-gray-600 dark:text-slate-400 text-sm sm:text-base">Manage your resume collection</p>
         </div>
         <button 
           onClick={() => setUploadModalOpen(true)}
@@ -293,68 +428,18 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
           Upload New Resume
         </button>
       </div>
-
-      {/* Resume Cards */}
-      {resumes.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {loadingResumes ? (
+        <div className="text-center py-16">Loading...</div>
+      ) : resumes.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {resumes.map((resume) => (
-            <div key={resume.id} className="pro-card rounded-2xl p-6 group">
-              {/* File Icon */}
-              <div className="flex items-center justify-center w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-2xl mb-4 mx-auto">
-                <FileText className="h-8 w-8 text-red-600 dark:text-red-400" />
-              </div>
-
-              {/* Resume Info */}
-              <div className="text-center mb-4">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 line-clamp-2">
-                  {resume.name}
-                </h3>
-                <div className="flex items-center justify-center space-x-4 text-sm text-gray-500 dark:text-slate-400">
-                  <span>{resume.fileSize}</span>
-                  <span>•</span>
-                  <span>{resume.uploadDate}</span>
-                </div>
-                {resume.isDefault && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-accent text-white mt-2">
-                    <Star className="h-3 w-3 mr-1" />
-                    Default
-                  </span>
-                )}
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center justify-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  onClick={() => handleResumeAction('download', resume.id)}
-                  className="p-2 text-gray-500 dark:text-slate-400 hover:text-accent rounded-lg transition-all"
-                  title="Download"
-                >
-                  <Download className="h-4 w-4" />
-                </button>
-                {!resume.isDefault && (
-                  <button
-                    onClick={() => handleResumeAction('setDefault', resume.id)}
-                    className="p-2 text-gray-500 dark:text-slate-400 hover:text-yellow-600 rounded-lg transition-all"
-                    title="Set as Default"
-                  >
-                    <Star className="h-4 w-4" />
-                  </button>
-                )}
-                <button
-                  className="p-2 text-gray-500 dark:text-slate-400 hover:text-accent rounded-lg transition-all"
-                  title="Rename"
-                >
-                  <Edit3 className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => handleResumeAction('delete', resume.id)}
-                  className="p-2 text-gray-500 dark:text-slate-400 hover:text-red-600 rounded-lg transition-all"
-                  title="Delete"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
+            <ResumeCard 
+              key={resume._id}
+              resume={resume}
+              onView={handleViewResume}
+              onDownload={handleDownloadResume}
+              onDelete={handleDeleteRequest}
+            />
           ))}
         </div>
       ) : (
@@ -381,8 +466,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Job Activity</h2>
-          <p className="text-gray-600 dark:text-slate-400">Track your applications and saved opportunities</p>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">Job Activity</h2>
+          <p className="text-gray-600 dark:text-slate-400 text-sm sm:text-base">Track your applications and saved opportunities</p>
         </div>
 
         {/* Clean Tabs - NO GRADIENTS */}
@@ -390,21 +475,19 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
           <nav className="flex space-x-8">
             <button
               onClick={() => setActiveTab('applied')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === 'applied'
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'applied'
                   ? 'tab-active'
                   : 'tab-inactive'
-              }`}
+                }`}
             >
               Applied Jobs ({appliedJobs.length})
             </button>
             <button
               onClick={() => setActiveTab('saved')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === 'saved'
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'saved'
                   ? 'tab-active'
                   : 'tab-inactive'
-              }`}
+                }`}
             >
               Saved Jobs ({savedJobs.length})
             </button>
@@ -416,7 +499,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
           {activeTab === 'applied' ? (
             appliedJobs.length > 0 ? (
               appliedJobs.map((job) => (
-                <div 
+                <div
                   key={job.id}
                   className="relative w-full cursor-pointer group hover:shadow-md transition-all bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-6"
                   onClick={() => handleJobRowClick(job.id)}
@@ -464,7 +547,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No applications yet</h3>
                 <p className="text-gray-600 dark:text-slate-400 mb-6">Start applying to jobs to track your progress here</p>
-                <button 
+                <button
                   onClick={onNavigateHome}
                   className="btn-primary px-6 py-3 rounded-xl font-semibold"
                 >
@@ -482,7 +565,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
               </div>
             ) : savedJobs.length > 0 ? (
               savedJobs.map((job) => (
-                <div 
+                <div
                   key={job.jobId}
                   className="relative w-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-6 cursor-pointer group hover:shadow-md transition-all"
                   onClick={() => handleSavedJobClick(job)}
@@ -498,9 +581,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
                     <div className="flex items-center space-x-4 flex-1">
                       <div className="w-12 h-12 rounded-xl bg-white dark:bg-white shadow-sm border border-gray-200 dark:border-gray-300 flex items-center justify-center overflow-hidden">
                         {job.company?.logo_url ? (
-                          <img 
-                            src={job.company.logo_url} 
-                            alt={job.companyName} 
+                          <img
+                            src={job.company.logo_url}
+                            alt={job.companyName}
                             className="w-full h-full object-contain p-1"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
@@ -543,7 +626,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
                         })()}
                         className={(() => {
                           const applyUrl = job.url || job.applicationUrl || job.apply_url || job.applyUrl;
-                          return (applyUrl && job.external) 
+                          return (applyUrl && job.external)
                             ? "px-4 py-2 text-sm font-medium bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white border-2 border-emerald-500 hover:border-emerald-400 rounded-lg shadow-md hover:shadow-lg hover:shadow-emerald-500/25 transition-all duration-300 hover:scale-105 active:scale-95"
                             : "px-4 py-2 text-sm font-medium bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white border-2 border-purple-500 hover:border-purple-400 rounded-lg shadow-md hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300 hover:scale-105 active:scale-95";
                         })()}
@@ -551,21 +634,21 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
                           e.stopPropagation();
                           // Check if this is an external job with apply URL
                           const applyUrl = job.url ||
-                                         job.applicationUrl || 
-                                         job.apply_url || 
-                                         job.applyUrl;
-                          
+                            job.applicationUrl ||
+                            job.apply_url ||
+                            job.applyUrl;
+
                           if (applyUrl && job.external) {
                             // External job with apply URL - open directly
                             window.open(applyUrl, '_blank', 'noopener,noreferrer');
-                            
+
                             try {
                               // Mark job as applied in the database
                               await markJobAsAppliedAPI(job.jobId);
-                              
+
                               // Remove from saved jobs list
                               setSavedJobs(prev => prev.filter(savedJob => savedJob.jobId !== job.jobId));
-                              
+
                               // Refresh applied jobs list
                               const updatedAppliedJobs = await getAppliedJobsFromAPI();
                               setAppliedJobs(updatedAppliedJobs);
@@ -578,7 +661,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
                           }
                         }}
                       />
-                      <button 
+                      <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleRemoveSavedJob(job.jobId);
@@ -601,7 +684,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No saved jobs yet</h3>
                 <p className="text-gray-600 dark:text-slate-400 mb-6">Start exploring and save jobs you're interested in</p>
-                <button 
+                <button
                   onClick={onNavigateHome}
                   className="btn-primary px-6 py-3 rounded-xl font-semibold"
                 >
@@ -618,7 +701,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}  
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
               className="fixed inset-0 bg-gray-500/30 dark:bg-black/50 backdrop-blur-sm z-50"
@@ -743,8 +826,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
 
       <div className="pro-card rounded-2xl p-6">
         <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Personal Information</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
               Full Name
@@ -755,7 +838,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
               className="pro-input w-full px-4 py-3 rounded-xl"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
               Email Address
@@ -766,7 +849,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
               className="pro-input w-full px-4 py-3 rounded-xl"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
               Phone Number
@@ -777,7 +860,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
               className="pro-input w-full px-4 py-3 rounded-xl"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
               Location
@@ -789,7 +872,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
             />
           </div>
         </div>
-        
+
         <div className="mt-6 pt-6 border-t border-gray-200 dark:border-slate-700">
           <button className="btn-primary px-6 py-3 rounded-xl font-semibold">
             Save Changes
@@ -816,16 +899,80 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex gap-8">
-          {/* Left Sidebar - Clean Pro Style */}
-          <div className="w-80 flex-shrink-0">
+      {/* Mobile Header */}
+      <div className="lg:hidden bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 px-4 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+            <p className="text-sm text-gray-600 dark:text-slate-400">Manage your career journey</p>
+          </div>
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+          >
+            <Menu className="h-6 w-6 text-gray-600 dark:text-gray-300" />
+          </button>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+        <div className="flex gap-4 sm:gap-6 lg:gap-8">
+          {/* Mobile Sidebar Overlay */}
+          {isSidebarOpen && (
+            <>
+              <div 
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
+                onClick={() => setIsSidebarOpen(false)}
+              />
+              <div className="fixed inset-y-0 left-0 z-50 w-80 bg-white dark:bg-slate-800 shadow-xl transform transition-transform duration-300 ease-in-out lg:hidden">
+                <div className="pro-card rounded-none h-full p-6 overflow-y-auto">
+                  <div className="flex items-center justify-between mb-8">
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Dashboard</h2>
+                      <p className="text-gray-600 dark:text-slate-400">Manage your career journey</p>
+                    </div>
+                    <button
+                      onClick={() => setIsSidebarOpen(false)}
+                      className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                    >
+                      <X className="h-6 w-6 text-gray-600 dark:text-gray-300" />
+                    </button>
+                  </div>
+
+                  <nav className="space-y-2">
+                    {sidebarItems.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => {
+                            setActiveSection(item.id);
+                            setIsSidebarOpen(false);
+                          }}
+                          className={`w-full flex items-center px-4 py-3 rounded-xl text-left transition-all ${activeSection === item.id
+                              ? 'nav-active'
+                              : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-slate-700'
+                            }`}
+                        >
+                          <Icon className="h-5 w-5 mr-3" />
+                          {item.label}
+                        </button>
+                      );
+                    })}
+                  </nav>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Desktop Left Sidebar */}
+          <div className="w-80 flex-shrink-0 hidden lg:block">
             <div className="pro-card rounded-2xl p-6 sticky top-8">
               <div className="mb-8">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Dashboard</h2>
                 <p className="text-gray-600 dark:text-slate-400">Manage your career journey</p>
               </div>
-              
+
               <nav className="space-y-2">
                 {sidebarItems.map((item) => {
                   const Icon = item.icon;
@@ -833,11 +980,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
                     <button
                       key={item.id}
                       onClick={() => setActiveSection(item.id)}
-                      className={`w-full flex items-center px-4 py-3 rounded-xl text-left transition-all ${
-                        activeSection === item.id
+                      className={`w-full flex items-center px-4 py-3 rounded-xl text-left transition-all ${activeSection === item.id
                           ? 'nav-active'
                           : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-slate-700'
-                      }`}
+                        }`}
                     >
                       <Icon className="h-5 w-5 mr-3" />
                       {item.label}
@@ -849,12 +995,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
           </div>
 
           {/* Main Content */}
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             {renderContent()}
           </div>
         </div>
       </div>
-      
       {/* Job Detail Drawer for Saved Jobs */}
       <JobDetailDrawer
         isOpen={isJobDrawerOpen}
@@ -862,15 +1007,26 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
         job={selectedSavedJob}
         onApply={() => handleApplyToSavedJob(selectedSavedJob?.jobId || selectedSavedJob?.id)}
       />
-      
       <DashboardModal
         uppy={uppy}
         open={isUploadModalOpen}
         onRequestClose={() => setUploadModalOpen(false)}
         theme='dark'
         proudlyDisplayPoweredByUppy={false}
-        note="Please upload your resume in PDF, DOC, or DOCX format (max 5MB)"
+        note="Please upload your resume in PDF, DOC, or DOCX format."
         closeModalOnClickOutside={true}
+      />
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Resume"
+        message="Are you sure you want to permanently delete this resume? This action cannot be undone."
+      />
+      <PDFViewerModal
+        isOpen={isPdfViewerOpen}
+        onClose={() => setPdfViewerOpen(false)}
+        filePath={pdfToView}
       />
     </div>
   );

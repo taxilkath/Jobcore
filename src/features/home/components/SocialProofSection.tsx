@@ -99,9 +99,9 @@ const SocialProofSection: React.FC = () => {
   ];
 
   return (
-    <div id="social-proof-section" className="bg-white dark:bg-gray-900 transition-colors duration-300">
+    <div id="social-proof-section" className="transition-colors duration-300">
       {/* Section 1: Dynamic Logo Marquee */}
-      <section className="py-16 lg:py-20 bg-gray-50 dark:bg-gray-800 transition-colors duration-300">
+      <section className="py-16 lg:py-20 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">
@@ -145,7 +145,7 @@ const SocialProofSection: React.FC = () => {
       </section>
 
       {/* Section 2: Premium Platform Showcase */}
-      <section className="py-20 lg:py-28 bg-white dark:bg-gray-900 transition-colors duration-300">
+      <section className="py-20 lg:py-28 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6">
@@ -230,11 +230,11 @@ const SocialProofSection: React.FC = () => {
       </section>
 
       {/* Section 3: Success by the Numbers */}
-      <section className="py-20 lg:py-28 bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-800 dark:to-gray-900 transition-colors duration-300">
+      <section className="py-20 lg:py-28 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6">
-              The <span className="gradient-text">UnifyJobs</span> Advantage
+              The <span className="gradient-text">JobCore</span> Advantage
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
               Experience the difference with our comprehensive platform that connects you to opportunities across the entire job market.

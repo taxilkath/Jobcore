@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getJobs, createJob, getJobPortals, getCompaniesByPortal, getExternalCompanyJobs, getExternalJobDetails, getSmartRecruitersJobDetails, clearJobPortalsCache, clearAllCache, updateExternalJobCounts } from '../controllers/jobController';
+import { getJobs, createJob, getJobPortals, getCompaniesByPortal, getExternalCompanyJobs, getExternalJobDetails, getSmartRecruitersJobDetails, clearJobPortalsCache, clearAllCache, updateExternalJobCounts, initializeTypesenseCollection, bulkIndexJobs } from '../controllers/jobController';
 import { cacheMiddleware, cacheKeyGenerators } from '../middleware/cache';
 import { CACHE_TTL } from '../utils/cache';
 import { externalJobService } from '../services/externalJobService';
@@ -72,8 +72,9 @@ router.delete('/cache/all', clearAllCache);
 // Update external job counts
 router.post('/update-external-counts', updateExternalJobCounts);
 
-// Bulk index jobs to Typesense (temporarily disabled)
-// router.post('/bulk-index', bulkIndexJobs);
+// Typesense management endpoints
+router.post('/typesense/init', initializeTypesenseCollection);
+router.post('/typesense/bulk-index', bulkIndexJobs);
 
 router.get('/portals/:portalName/companies', cacheMiddleware({
   ttl: CACHE_TTL.COMPANIES,

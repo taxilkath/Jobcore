@@ -290,7 +290,7 @@ const CompanyJobs: React.FC = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50/30 via-white to-cyan-50/40 dark:from-emerald-950/10 dark:via-gray-900 dark:to-cyan-950/20 py-8 transition-colors duration-300">
+      <div className="min-h-screen py-8 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 mb-8">
             <button 
@@ -585,7 +585,17 @@ const JobListItem: React.FC<JobListItemProps> = ({
 
             <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs font-medium">
               <Users className="h-3 w-3 mr-1" />
-              {Math.floor(Math.random() * 4950) + 50} employees
+              {(() => {
+                // Generate consistent employee count based on job ID
+                const seed = job.id ? job.id.toString() : job.title;
+                let hash = 0;
+                for (let i = 0; i < seed.length; i++) {
+                  const char = seed.charCodeAt(i);
+                  hash = ((hash << 5) - hash) + char;
+                  hash = hash & hash; // Convert to 32-bit integer
+                }
+                return Math.abs(hash % 4950) + 50;
+              })()} employees
             </span>
           </div>
         </div>

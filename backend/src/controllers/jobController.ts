@@ -4,6 +4,7 @@ import Company from '../models/Company';
 import JobPortal from '../models/JobPortal';
 import { deleteFromCache, generateJobsCacheKey, generateJobPortalsCacheKey, generateCompaniesByPortalCacheKey } from '../utils/cache';
 import { externalJobService } from '../services/externalJobService';
+import { searchService } from '../services/searchService';
 
 const defaultPortals = [
   { name: 'Lever', pattern: 'lever\\.co' },
@@ -83,7 +84,6 @@ export const getJobs = async (req: Request, res: Response): Promise<void> => {
     // If only external jobs are requested
     if (includeInternal === 'false' && includeExternal === 'true') {
       try {
-        console.log('Fetching external jobs with token:', externalPageToken);
         
         const externalResults = await externalJobService.searchAllExternalJobs({
           query: search as string,
@@ -127,6 +127,34 @@ export const getJobs = async (req: Request, res: Response): Promise<void> => {
 
     // If only internal jobs are requested
     if (includeInternal === 'true' && includeExternal === 'false') {
+      try {
+        // Try Typesense search first
+        const typesenseResults = await searchService.searchJobs({
+          query: search as string || '*',
+          jobType: jobType as string,
+          page: currentPage,
+          limit: requestedLimit
+        });
+
+        res.json({
+          jobs: typesenseResults.jobs,
+          totalJobs: typesenseResults.totalJobs,
+          currentPage: currentPage,
+          totalPages: typesenseResults.totalPages,
+          sources: {
+            internal: typesenseResults.jobs.length,
+            external: 0
+          },
+          pagination: {
+            hasNextPage: currentPage < typesenseResults.totalPages
+          },
+          searchEngine: 'typesense'
+        });
+        return;
+      } catch (typesenseError) {
+        console.log('Typesense search failed, falling back to MongoDB:', typesenseError);
+        
+        // Fallback to MongoDB search
       let companyIds: any[] = [];
       if (search) {
         const companies = await Company.find({ name: new RegExp(search as string, 'i') });
@@ -167,9 +195,11 @@ export const getJobs = async (req: Request, res: Response): Promise<void> => {
         },
         pagination: {
           hasNextPage: currentPage < Math.ceil(mongoTotal / requestedLimit)
-        }
+          },
+          searchEngine: 'mongodb'
       });
       return;
+      }
     }
 
     // Mixed results (both internal and external) - Use simpler approach
@@ -177,6 +207,24 @@ export const getJobs = async (req: Request, res: Response): Promise<void> => {
       // For mixed results, we'll show internal jobs first, then external
       // This provides more predictable pagination
       
+      let internalJobs: any[] = [];
+      let internalTotal = 0;
+      
+      try {
+        // Try Typesense search for internal jobs first
+        const typesenseResults = await searchService.searchJobs({
+          query: search as string || '*',
+          jobType: jobType as string,
+          page: currentPage,
+          limit: requestedLimit
+        });
+        
+        internalJobs = typesenseResults.jobs;
+        internalTotal = typesenseResults.totalJobs;
+      } catch (typesenseError) {
+        console.log('Typesense search failed, falling back to MongoDB for mixed search:', typesenseError);
+        
+        // Fallback to MongoDB search for internal jobs
       let companyIds: any[] = [];
       if (search) {
         const companies = await Company.find({ name: new RegExp(search as string, 'i') });
@@ -198,21 +246,27 @@ export const getJobs = async (req: Request, res: Response): Promise<void> => {
       }
 
       // Get total count of internal jobs
-      const mongoTotal = await Job.countDocuments(mongoQuery);
-      
-      let allJobs: any[] = [];
-      let totalCombined = mongoTotal;
+        internalTotal = await Job.countDocuments(mongoQuery);
       
       // If we're still in the internal jobs range
-      if (skipCount < mongoTotal) {
-        const internalJobsToFetch = Math.min(requestedLimit, mongoTotal - skipCount);
+        if (skipCount < internalTotal) {
+          const internalJobsToFetch = Math.min(requestedLimit, internalTotal - skipCount);
         const mongoJobs = await Job.find(mongoQuery)
           .populate('company')
           .sort({ publishedAt: -1 })
           .limit(internalJobsToFetch)
           .skip(skipCount);
         
-        allJobs = [...mongoJobs];
+          internalJobs = [...mongoJobs];
+        }
+      }
+      
+      let allJobs: any[] = [];
+      let totalCombined = internalTotal;
+      
+      // If we're still in the internal jobs range
+      if (skipCount < internalTotal) {
+        allJobs = [...internalJobs];
         
         // If we have space for external jobs and fetched all available internal jobs for this page
         if (allJobs.length < requestedLimit) {
@@ -225,7 +279,7 @@ export const getJobs = async (req: Request, res: Response): Promise<void> => {
             });
             
             allJobs = [...allJobs, ...externalResults.jobs];
-            totalCombined = mongoTotal + Math.min(externalResults.totalJobs, 500); // Cap external
+            totalCombined = internalTotal + Math.min(externalResults.totalJobs, 500); // Cap external
           } catch (externalError) {
             console.error('External job fetch failed:', externalError);
           }
@@ -233,7 +287,7 @@ export const getJobs = async (req: Request, res: Response): Promise<void> => {
       } else {
         // We're past internal jobs, fetch only external
         try {
-          const externalSkip = skipCount - mongoTotal;
+          const externalSkip = skipCount - internalTotal;
           const externalResults = await externalJobService.searchAllExternalJobs({
             query: search as string,
             limit: requestedLimit,
@@ -243,7 +297,7 @@ export const getJobs = async (req: Request, res: Response): Promise<void> => {
           // Since external APIs don't support skip, we'll start from beginning
           // This is a limitation but provides consistent results
           allJobs = externalResults.jobs;
-          totalCombined = mongoTotal + Math.min(externalResults.totalJobs, 500);
+          totalCombined = internalTotal + Math.min(externalResults.totalJobs, 500);
         } catch (externalError) {
           console.error('External job fetch failed:', externalError);
           allJobs = [];
@@ -300,6 +354,16 @@ export const createJob = async (req: Request, res: Response): Promise<void> => {
 
   try {
     const newJob = await job.save();
+    
+    // Index the new job to Typesense
+    try {
+      await newJob.populate('company');
+      await searchService.indexJob(newJob);
+      console.log('Job indexed to Typesense successfully');
+    } catch (typesenseError) {
+      console.error('Failed to index job to Typesense:', typesenseError);
+      // Don't fail the request if indexing fails
+    }
     
     // Invalidate relevant caches when a new job is created
     try {
@@ -396,6 +460,91 @@ export const clearAllCache = async (req: Request, res: Response): Promise<void> 
     res.json({ message: 'All caches cleared successfully' });
   } catch (error) {
     console.error('Error clearing all caches:', error);
+    if (error instanceof Error) {
+      res.status(500).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: 'An unknown error occurred' });
+    }
+  }
+};
+
+export const initializeTypesenseCollection = async (req: Request, res: Response): Promise<void> => {
+  try {
+    await searchService.initializeCollection();
+    res.json({ message: 'Typesense collection initialized successfully' });
+  } catch (error) {
+    console.error('Error initializing Typesense collection:', error);
+    if (error instanceof Error) {
+      res.status(500).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: 'An unknown error occurred' });
+    }
+  }
+};
+
+export const bulkIndexJobs = async (req: Request, res: Response): Promise<void> => {
+  try {
+    // Initialize collection first
+    await searchService.initializeCollection();
+    
+    // Get total job count
+    const totalJobs = await Job.countDocuments({});
+    
+    if (totalJobs === 0) {
+      res.json({ message: 'No jobs found to index' });
+      return;
+    }
+
+    const batchSize = 5000; // Process in smaller batches
+    const totalBatches = Math.ceil(totalJobs / batchSize);
+    let totalIndexed = 0;
+    const results = [];
+
+    console.log(`Starting bulk indexing of ${totalJobs} jobs in ${totalBatches} batches...`);
+
+    for (let batch = 0; batch < totalBatches; batch++) {
+      const skip = batch * batchSize;
+      console.log(`Processing batch ${batch + 1}/${totalBatches} (${skip + 1}-${Math.min(skip + batchSize, totalJobs)})`);
+      
+      try {
+        // Get jobs in batches with populated company data
+        const jobs = await Job.find({})
+          .populate('company')
+          .skip(skip)
+          .limit(batchSize)
+          .lean(); // Use lean() for better performance
+        
+        if (jobs.length === 0) {
+          console.log(`No jobs found in batch ${batch + 1}`);
+          continue;
+        }
+
+        // Bulk index this batch
+        const batchResults = await searchService.bulkIndexJobs(jobs);
+        results.push(batchResults);
+        totalIndexed += jobs.length;
+        
+        console.log(`Batch ${batch + 1} completed: ${jobs.length} jobs indexed`);
+        
+        // Add a small delay to prevent overwhelming the system
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+      } catch (batchError) {
+        console.error(`Error in batch ${batch + 1}:`, batchError);
+        results.push({ error: `Batch ${batch + 1} failed: ${batchError}` });
+      }
+    }
+    
+    res.json({ 
+      message: `Bulk indexing completed: ${totalIndexed}/${totalJobs} jobs indexed`,
+      totalJobs: totalJobs,
+      totalIndexed: totalIndexed,
+      batches: totalBatches,
+      batchSize: batchSize,
+      results: results
+    });
+  } catch (error) {
+    console.error('Error bulk indexing jobs:', error);
     if (error instanceof Error) {
       res.status(500).json({ message: error.message });
     } else {
@@ -658,6 +807,17 @@ export const getExternalCompanyJobs = async (req: Request, res: Response): Promi
         // Greenhouse API format: https://boards-api.greenhouse.io/v1/boards/{companyName}/jobs?content=true
         const companySlug = company.name.toLowerCase().replace(/[^a-z0-9]/g, '');
         apiUrl = `https://boards-api.greenhouse.io/v1/boards/${companySlug}/jobs?content=true`;
+      } else if (portal.name.toLowerCase().includes('workday')) {
+        // Workday jobs are stored in internal database, not fetched from external API
+        const internalJobs = await Job.find({ company: companyId }).populate('company');
+        res.json({
+          jobs: internalJobs,
+          source: 'internal',
+          portal: portal.name,
+          company: company.name,
+          message: `Showing ${internalJobs.length} internal jobs for ${company.name}`
+        });
+        return;
       } else {
         res.status(400).json({ message: `External API not supported for portal: ${portal.name}` });
         return;

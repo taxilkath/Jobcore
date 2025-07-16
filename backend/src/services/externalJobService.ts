@@ -429,7 +429,6 @@ export class ExternalJobService {
     // Fetch detailed job data from actions.details for complete information
     let detailedJobData: any = null;
     try {
-      console.log('Fetching SmartRecruiters job details for:', job.id);
       const detailResponse = await fetch(job.actions.details);
       if (detailResponse.ok) {
         detailedJobData = await detailResponse.json();
@@ -646,7 +645,6 @@ export class ExternalJobService {
 
   async getSmartRecruitersJobDetails(detailsUrl: string): Promise<any> {
     try {
-      console.log('Fetching SmartRecruiters job details:', detailsUrl);
       
       const response = await fetch(detailsUrl);
       
@@ -738,7 +736,6 @@ export class ExternalJobService {
         }
       };
 
-      console.log('Hiring.cafe request body:', JSON.stringify(requestBody, null, 2));
 
       const response = await fetch(this.hiringCafeBaseUrl, {
         method: 'POST',
@@ -756,12 +753,7 @@ export class ExternalJobService {
       }
 
       const data = await response.json();
-      console.log('Hiring.cafe response structure:', {
-        keys: Object.keys(data),
-        hasHits: !!data.hits,
-        dataType: typeof data,
-        isArray: Array.isArray(data)
-      });
+      
 
       // Handle different possible response formats
       let jobs = [];

@@ -64,8 +64,8 @@ export class SearchService {
         description: job.description || '',
         requirements: job.requirements || [],
         salary: job.salary || '',
-        publishedat: new Date(job.publishedat || job.createdAt).getTime(),
-        apply_url: job.apply_url || job.applyUrl || job.applicationUrl || ''
+        publishedat: new Date(job.publishedAt || job.createdAt || Date.now()).getTime(),
+        apply_url: job.url || job.apply_url || job.applyUrl || job.applicationUrl || ''
       };
 
       await typesenseClient.collections(this.collectionName).documents().upsert(document);
@@ -104,25 +104,31 @@ export class SearchService {
         .documents()
         .search(searchParams);
 
-      const jobs = searchResults.hits?.map(hit => {
-        const doc = hit.document as JobDocument;
+      // Get job IDs from Typesense results
+      const jobIds = searchResults.hits?.map(hit => (hit.document as JobDocument).id) || [];
+      
+      // Fetch full job details from MongoDB
+      const Job = (await import('../models/Job')).default;
+      const fullJobs = await Job.find({ _id: { $in: jobIds } })
+        .populate('company')
+        .lean();
+      
+      // Create a map of highlights by job ID
+      const highlightsMap = new Map();
+      searchResults.hits?.forEach(hit => {
+        highlightsMap.set((hit.document as JobDocument).id, hit.highlights);
+      });
+      
+      // Combine MongoDB job data with Typesense highlights, preserving search result order
+      const jobs = jobIds.map(jobId => {
+        const job = fullJobs.find(j => j._id.toString() === jobId);
+        if (!job) return null;
+        
         return {
-          _id: doc.id,
-          title: doc.title,
-          company: {
-            name: doc.company
-          },
-          location: doc.location,
-          type: doc.jobType,
-          description: doc.description,
-          requirements: doc.requirements,
-          salary: doc.salary,
-          publishedat: new Date(doc.publishedat),
-          apply_url: doc.apply_url,
-          // Add highlights if available
-          highlights: hit.highlights
+          ...job,
+          highlights: highlightsMap.get(jobId) || []
         };
-      }) || [];
+      }).filter(Boolean);
 
       const totalJobs = searchResults.found || 0;
       const totalPages = Math.ceil(totalJobs / limit);
@@ -156,8 +162,8 @@ export class SearchService {
         description: job.description || '',
         requirements: job.requirements || [],
         salary: job.salary || '',
-        publishedat: new Date(job.publishedat || job.createdAt).getTime(),
-        apply_url: job.apply_url || job.applyUrl || job.applicationUrl || ''
+        publishedat: new Date(job.publishedAt || job.createdAt || Date.now()).getTime(),
+        apply_url: job.url || job.apply_url || job.applyUrl || job.applicationUrl || ''
       }));
 
       const results = await typesenseClient

@@ -319,6 +319,22 @@ export const getSavedJobsWithDetails = async (req: Request, res: Response): Prom
         // Second priority: Try to find the job in our internal collection
         
         try {
+          // Try to match by both _id (for internal jobs) and id (for external jobs)
+          let matchQuery = {};
+          
+          // Check if jobId is a valid ObjectId
+          if (Types.ObjectId.isValid(jobData.jobId)) {
+            matchQuery = {
+              $or: [
+                { _id: new Types.ObjectId(jobData.jobId) },
+                { id: jobData.jobId }
+              ]
+            };
+          } else {
+            // For non-ObjectId jobIds (external jobs), match by id field
+            matchQuery = { id: jobData.jobId };
+          }
+
           const internalJobs = await Job.aggregate([
             {
               $lookup: {
@@ -329,9 +345,7 @@ export const getSavedJobsWithDetails = async (req: Request, res: Response): Prom
               }
             },
             {
-              $match: {
-                _id: new Types.ObjectId(jobData.jobId)
-              }
+              $match: matchQuery
             },
             {
               $limit: 1
@@ -364,7 +378,7 @@ export const getSavedJobsWithDetails = async (req: Request, res: Response): Prom
               savedAt: jobData.savedAt,
               applied: jobData.applied,
               department: null,
-              external: false
+              external: internalJob.external || false
             };
           }
         } catch (error) {

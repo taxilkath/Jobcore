@@ -24,6 +24,15 @@ const JobsPage: React.FC = () => {
   const [sourceFilter, setSourceFilter] = useState<'internal' | 'external'>('internal');
   const [nextExternalPageToken, setNextExternalPageToken] = useState<string | null>(null);
   const [hasMoreJobs, setHasMoreJobs] = useState(true);
+  const [searchStats, setSearchStats] = useState<{
+    totalJobs: number;
+    searchEngine: string;
+    searchTime?: number;
+  }>({
+    totalJobs: 0,
+    searchEngine: 'typesense',
+    searchTime: undefined
+  });
 
   // Fetch saved job IDs to filter them out
   const fetchSavedJobIds = useCallback(async () => {
@@ -86,8 +95,11 @@ const JobsPage: React.FC = () => {
         params.append('includeInternal', 'true');
       }
       
+      const startTime = performance.now();
       const response = await fetch(`/api/jobs?${params.toString()}`);
       const data = await response.json();
+      const endTime = performance.now();
+      const searchTime = Math.round(endTime - startTime);
       
       // Filter out saved jobs
       const filteredJobs = data.jobs.filter((job: any) => {
@@ -106,6 +118,13 @@ const JobsPage: React.FC = () => {
       
       setTotalJobs(data.totalJobs);
       setJobsPerPage(10);
+      
+      // Update search stats
+      setSearchStats({
+        totalJobs: data.totalJobs,
+        searchEngine: data.searchEngine || 'typesense',
+        searchTime: searchTime
+      });
       
       // Handle external pagination tokens
       if (data.pagination?.nextExternalPageToken) {
@@ -222,8 +241,8 @@ const JobsPage: React.FC = () => {
 
   return (
     <>
-      <SearchSection onSearch={handleSearch} initialSearchParams={searchParams} />
-      <div className="bg-gray-50 dark:bg-slate-900/50">
+      <SearchSection onSearch={handleSearch} initialSearchParams={searchParams} searchStats={searchStats} />
+      <div className="transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className={`flex gap-8 transition-all duration-300 ${showFilters ? '' : 'justify-center'}`}>
             {showFilters && (

@@ -658,7 +658,7 @@ const PlatformDirectory: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-16 lg:py-24 transition-colors duration-300">
+    <div className="min-h-screen py-16 lg:py-24 transition-colors duration-300">
       <div className="absolute inset-0 bg-gradient-to-r from-teal-500/5 to-blue-600/5 dark:from-teal-500/10 dark:to-blue-600/10"></div>
       <div className="absolute top-20 left-10 w-72 h-72 bg-teal-500/10 dark:bg-teal-500/20 rounded-full blur-3xl"></div>
       <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-600/10 dark:bg-blue-600/20 rounded-full blur-3xl"></div>

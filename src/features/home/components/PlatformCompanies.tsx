@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, ChevronRight, Building, Users, MapPin, ArrowLeft, SortAsc, LayoutGrid, List, ChevronLeft, Loader2 } from 'lucide-react';
+import { Search, ChevronRight, Building, Users, MapPin, ArrowLeft, SortAsc, LayoutGrid, List, ChevronLeft, Loader2, X } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 interface Company {
@@ -22,6 +22,7 @@ const PlatformCompanies: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
   const [animationDelay, setAnimationDelay] = useState(0);
+  const [isSearching, setIsSearching] = useState(false);
   const [companies, setCompanies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -76,17 +77,34 @@ const PlatformCompanies: React.FC = () => {
 
   // Process companies data - memoized to prevent infinite re-renders
   const allCompanies = useMemo(() => 
-    companies.map((company: any) => ({
+    companies.map((company: any) => {
+      // Generate consistent random values based on company name
+      const seed = company.name ? company.name.length : 0;
+      const sizeHash = (seed * 7) % 10;
+      const industryHash = (seed * 3) % 8;
+      
+      const industries = [
+        'Technology', 'Healthcare', 'Finance', 'E-commerce', 
+        'Education', 'Media', 'Manufacturing', 'Consulting'
+      ];
+      
+      const locations = [
+        'Remote', 'New York, NY', 'San Francisco, CA', 'London, UK',
+        'Toronto, CA', 'Berlin, DE', 'Austin, TX', 'Seattle, WA'
+      ];
+      
+      return {
       id: company._id,
       name: company.name,
       logo: company.logo || '/placeholder-logo.png',
-      industry: 'Technology',
-      location: 'Remote',
-      size: Math.floor(Math.random() * 4950) + 50, // Random number between 50-5000
+        industry: industries[industryHash] || 'Technology',
+        location: locations[sizeHash] || 'Remote',
+        size: Math.floor((seed * 123) % 4950) + 50, // Consistent random size
       openRoles: company.jobCount || 0,
-      description: `Join ${company.name} and explore exciting opportunities.`,
+        description: `Join ${company.name} and explore exciting opportunities in ${industries[industryHash]}.`,
       founded: 'N/A'
-    })), [companies]
+      };
+    }), [companies]
   );
 
   const platform = platformData[platformId as keyof typeof platformData];
@@ -173,12 +191,27 @@ const PlatformCompanies: React.FC = () => {
     setFilteredCompanies(allCompanies);
   }, [allCompanies]);
 
+  // Enhanced search with debouncing
   useEffect(() => {
-    let filtered = allCompanies.filter(company =>
-      company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.industry.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    setIsSearching(true);
+    
+    const searchTimeout = setTimeout(() => {
+      let filtered = allCompanies;
 
+      // Apply search filter
+      if (searchTerm.trim()) {
+        const searchLower = searchTerm.toLowerCase().trim();
+        filtered = allCompanies.filter(company => {
+          const nameMatch = company.name.toLowerCase().includes(searchLower);
+          const industryMatch = company.industry.toLowerCase().includes(searchLower);
+          const locationMatch = company.location.toLowerCase().includes(searchLower);
+          const descriptionMatch = company.description.toLowerCase().includes(searchLower);
+          
+          return nameMatch || industryMatch || locationMatch || descriptionMatch;
+        });
+      }
+
+      // Apply sorting
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'name':
@@ -193,6 +226,10 @@ const PlatformCompanies: React.FC = () => {
     });
 
     setFilteredCompanies(filtered);
+      setIsSearching(false);
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(searchTimeout);
   }, [searchTerm, sortBy, allCompanies]);
 
   useEffect(() => {
@@ -216,6 +253,34 @@ const PlatformCompanies: React.FC = () => {
     localStorage.setItem('companyViewMode', mode);
   };
 
+  const handleClearSearch = () => {
+    setSearchTerm('');
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Escape') {
+      handleClearSearch();
+    }
+  };
+
+  // Helper function to highlight search terms
+  const highlightSearchTerm = (text: string, searchTerm: string) => {
+    if (!searchTerm) return text;
+    
+    const regex = new RegExp(`(${searchTerm})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, index) => 
+      regex.test(part) ? (
+        <span key={index} className="bg-yellow-200 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 px-1 rounded">
+          {part}
+        </span>
+      ) : (
+        part
+      )
+    );
+  };
+
 
 
   if (!platformId) {
@@ -225,7 +290,7 @@ const PlatformCompanies: React.FC = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8 transition-colors duration-300">
+      <div className="min-h-screen py-8 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
@@ -263,7 +328,7 @@ const PlatformCompanies: React.FC = () => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8 transition-colors duration-300">
+    <div className="min-h-screen py-8 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumbs */}
         <nav className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 mb-8">
@@ -321,11 +386,28 @@ const PlatformCompanies: React.FC = () => {
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 h-5 w-5" />
               <input
                 type="text"
-                placeholder="Search company name or industry..."
+                placeholder="Search company name, industry, or location... (Press Escape to clear)"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 text-lg border-0 focus:ring-2 focus:ring-teal-500/20 focus:outline-none placeholder-gray-500 dark:placeholder-gray-400 rounded-xl bg-gray-50/50 dark:bg-gray-700/50 text-gray-900 dark:text-white transition-all"
+                onKeyDown={handleSearchKeyDown}
+                className="w-full pl-12 pr-12 py-4 text-lg border-0 focus:ring-2 focus:ring-teal-500/20 focus:outline-none placeholder-gray-500 dark:placeholder-gray-400 rounded-xl bg-gray-50/50 dark:bg-gray-700/50 text-gray-900 dark:text-white transition-all"
               />
+              {/* Clear Search Button */}
+              {searchTerm && !isSearching && (
+                <button
+                  onClick={handleClearSearch}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                  title="Clear search (Esc)"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              )}
+              {/* Search Loading Indicator */}
+              {isSearching && (
+                <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                  <Loader2 className="h-5 w-5 animate-spin text-teal-500" />
+                </div>
+              )}
             </div>
 
             <div className="flex items-center space-x-4">
@@ -372,9 +454,30 @@ const PlatformCompanies: React.FC = () => {
 
         {/* Results Info */}
         <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-4">
           <p className="text-gray-600 dark:text-gray-400">
+              {searchTerm ? (
+                <>
+                  Found <span className="font-semibold text-teal-600">{filteredCompanies.length}</span> companies 
+                  {searchTerm && (
+                    <span className="ml-1">
+                      for "<span className="font-semibold text-gray-900 dark:text-white">{searchTerm}</span>"
+                    </span>
+                  )}
+                </>
+              ) : (
+                <>
             Showing <span className="font-semibold text-teal-600">{filteredCompanies.length}</span> companies
-          </p>
+                </>
+              )}
+            </p>
+            {isSearching && (
+              <div className="flex items-center space-x-2">
+                <Loader2 className="h-4 w-4 animate-spin text-teal-500" />
+                <span className="text-sm text-gray-500 dark:text-gray-400">Searching...</span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Companies Display */}
@@ -388,6 +491,8 @@ const PlatformCompanies: React.FC = () => {
                 animationDelay={0}
                 onClick={() => handleCompanySelect(company.id)}
                 platformColor={platform?.brandColor || '#3B82F6'}
+                searchTerm={searchTerm}
+                highlightSearchTerm={highlightSearchTerm}
               />
             ))}
           </div>
@@ -400,6 +505,8 @@ const PlatformCompanies: React.FC = () => {
                 index={index}
                 onClick={() => handleCompanySelect(company.id)}
                 platformColor={platform?.brandColor || '#3B82F6'}
+                searchTerm={searchTerm}
+                highlightSearchTerm={highlightSearchTerm}
               />
             ))}
           </div>
@@ -416,11 +523,32 @@ const PlatformCompanies: React.FC = () => {
         )}
 
         {/* Empty State */}
-        {filteredCompanies.length === 0 && (
+        {filteredCompanies.length === 0 && !isSearching && (
           <div className="text-center py-16">
             <Building className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+            {searchTerm ? (
+              <>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                  No companies found for "{searchTerm}"
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">
+                  Try searching for different terms or check your spelling
+                </p>
+                <button
+                  onClick={handleClearSearch}
+                  className="px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-xl transition-colors"
+                >
+                  Clear Search
+                </button>
+              </>
+            ) : (
+              <>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No companies found</h3>
-            <p className="text-gray-600 dark:text-gray-400">Try adjusting your search terms</p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  {allCompanies.length === 0 ? 'No companies available on this platform' : 'Try adjusting your search terms'}
+                </p>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -435,6 +563,8 @@ interface CompanyCardProps {
   animationDelay: number;
   onClick: () => void;
   platformColor: string;
+  searchTerm?: string;
+  highlightSearchTerm?: (text: string, searchTerm: string) => React.ReactNode;
 }
 
 const CompanyCard: React.FC<CompanyCardProps> = ({
@@ -442,7 +572,9 @@ const CompanyCard: React.FC<CompanyCardProps> = ({
   index,
   animationDelay,
   onClick,
-  platformColor
+  platformColor,
+  searchTerm = '',
+  highlightSearchTerm
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -488,7 +620,7 @@ const CompanyCard: React.FC<CompanyCardProps> = ({
         {/* Company Info */}
         <div className="text-center mb-4">
           <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors">
-            {company.name}
+            {highlightSearchTerm ? highlightSearchTerm(company.name, searchTerm) : company.name}
           </h3>
           
           {/* Industry Tag */}
@@ -544,13 +676,17 @@ interface CompanyListItemProps {
   index: number;
   onClick: () => void;
   platformColor: string;
+  searchTerm?: string;
+  highlightSearchTerm?: (text: string, searchTerm: string) => React.ReactNode;
 }
 
 const CompanyListItem: React.FC<CompanyListItemProps> = ({
   company,
   index,
   onClick,
-  platformColor
+  platformColor,
+  searchTerm = '',
+  highlightSearchTerm
 }) => {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -584,7 +720,7 @@ const CompanyListItem: React.FC<CompanyListItemProps> = ({
             </div>
             <div className="min-w-0">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors truncate">
-                {company.name}
+                {highlightSearchTerm ? highlightSearchTerm(company.name, searchTerm) : company.name}
               </h3>
               <span 
                 className="inline-block px-2 py-1 rounded-full text-xs font-semibold text-white mt-1"

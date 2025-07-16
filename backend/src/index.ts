@@ -5,6 +5,7 @@ import connectDB from './config/db';
 import jobRoutes from './routes/jobs';
 import userJobRoutes from './routes/userJobs';
 import { searchService } from './services/searchService';
+import resumeRoutes from './routes/resumes'; // Make sure this line is present
 
 dotenv.config();
 
@@ -37,6 +38,7 @@ app.use(express.json());
 
 app.use('/api/jobs', jobRoutes);
 app.use('/api/user-jobs', userJobRoutes);
+app.use('/api/resumes', resumeRoutes); // Use the new resume routes
 
 app.listen(port, () => {
   console.log(`Server is running on port: ${port}`);

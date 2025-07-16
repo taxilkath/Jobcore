@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Link, NavLink } from 'react-router-dom';
-import { Search, Menu, User, Moon, Sun, LogOut, LayoutDashboard } from 'lucide-react';
+import { LayoutDashboard, LogOut, Menu, Moon, Sun, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import AnimatedBorder from '../ui/AnimatedBorder';
 
@@ -11,7 +11,9 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ onMenuToggle, currentView }) => {
   const { user, signOut } = useAuth();
+  const location = useLocation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
@@ -21,6 +23,26 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, currentView }) => {
       document.documentElement.classList.add('dark');
     }
   }, []);
+
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (mobileMenuOpen && !target.closest('.mobile-menu-container')) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    if (mobileMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [mobileMenuOpen]);
+
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const toggleDarkMode = () => {
     setIsDark(!isDark);
@@ -35,15 +57,22 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, currentView }) => {
     <header className="sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg z-40 border-b border-gray-200 dark:border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
         {/* Logo and Menu */}
-        <div className="flex items-center gap-4">
+        <div className="mobile-menu-container flex items-center gap-4">
           <Link to="/" className="flex items-center gap-2 text-xl font-bold text-gray-800 dark:text-white">
             <svg className="h-8 w-8 text-accent" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5-10-5-10 5z" />
             </svg>
             <span>JobCore</span>
           </Link>
-          <button onClick={onMenuToggle} className="md:hidden">
-            <Menu className="h-6 w-6" />
+          <button 
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
+            className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+          >
+            {mobileMenuOpen ? (
+              <X className="h-6 w-6 text-gray-600 dark:text-gray-300" />
+            ) : (
+              <Menu className="h-6 w-6 text-gray-600 dark:text-gray-300" />
+            )}
           </button>
         </div>
 
@@ -53,7 +82,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, currentView }) => {
             Find Jobs
           </NavLink>
           <NavLink to="/platforms" className={({isActive}) => `px-4 py-2 rounded-xl text-sm font-semibold transition-all ${isActive ? 'text-accent bg-accent/5' : 'text-gray-600 dark:text-gray-300 hover:text-accent hover:bg-accent/5'}`}>
-            Browse Platforms
+             Platforms
           </NavLink>
           {user && (
             <NavLink to="/dashboard" className={({isActive}) => `px-4 py-2 rounded-xl text-sm font-semibold transition-all ${isActive ? 'text-accent bg-accent/5' : 'text-gray-600 dark:text-gray-300 hover:text-accent hover:bg-accent/5'}`}>
@@ -116,6 +145,61 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, currentView }) => {
           </button>
         </div>
       </div>
+
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden animate-fade-in"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          
+          {/* Mobile Menu Panel */}
+          <div className="mobile-menu-container fixed top-16 left-0 right-0 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 z-50 md:hidden shadow-lg animate-slide-in">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+              <nav className="space-y-2">
+                <NavLink 
+                  to="/jobs" 
+                  className={({isActive}) => `block px-4 py-3 rounded-xl text-base font-semibold transition-all ${isActive ? 'text-accent bg-accent/5' : 'text-gray-600 dark:text-gray-300 hover:text-accent hover:bg-accent/5'}`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Find Jobs
+                </NavLink>
+                <NavLink 
+                  to="/platforms" 
+                  className={({isActive}) => `block px-4 py-3 rounded-xl text-base font-semibold transition-all ${isActive ? 'text-accent bg-accent/5' : 'text-gray-600 dark:text-gray-300 hover:text-accent hover:bg-accent/5'}`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Browse Platforms
+                </NavLink>
+                {user && (
+                  <NavLink 
+                    to="/dashboard" 
+                    className={({isActive}) => `block px-4 py-3 rounded-xl text-base font-semibold transition-all ${isActive ? 'text-accent bg-accent/5' : 'text-gray-600 dark:text-gray-300 hover:text-accent hover:bg-accent/5'}`}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Dashboard
+                  </NavLink>
+                )}
+                
+                {/* Mobile Auth Section */}
+                {!user && (
+                  <div className="pt-4 border-t border-gray-200 dark:border-slate-700">
+                    <Link 
+                      to="/auth" 
+                      className="block w-full btn-secondary px-4 py-3 rounded-xl text-base font-semibold text-center"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Sign In
+                    </Link>
+                  </div>
+                )}
+              </nav>
+            </div>
+          </div>
+        </>
+      )}
     </header>
   );
 };

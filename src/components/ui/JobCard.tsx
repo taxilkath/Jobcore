@@ -240,7 +240,17 @@ export const JobCard: React.FC<JobCardProps> = ({
 
         <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-sm font-medium">
           <Users className="h-4 w-4 mr-1.5" />
-          {Math.floor(Math.random() * 4950) + 50} employees
+          {(() => {
+            // Generate consistent employee count based on job ID
+            const seed = job.id ? job.id.toString() : job.title;
+            let hash = 0;
+            for (let i = 0; i < seed.length; i++) {
+              const char = seed.charCodeAt(i);
+              hash = ((hash << 5) - hash) + char;
+              hash = hash & hash; // Convert to 32-bit integer
+            }
+            return Math.abs(hash % 4950) + 50;
+          })()} employees
         </span>
       </div>
 
