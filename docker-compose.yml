@@ -1,9 +1,7 @@
-version: '3.8'
-
 services:
   # MongoDB Database
   mongodb:
-    image: mongo:7.0
+    image: mongo:latest
     container_name: jobcore-mongodb
     restart: unless-stopped
     ports:
