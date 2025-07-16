@@ -68,9 +68,8 @@ services:
       - REDIS_URL=redis://redis:6379
       - REDIS_PASSWORD=redis123
       # Add other environment variables as needed
-      - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - SUPABASE_URL=${VITE_SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
     volumes:
       - ./backend:/app
       - backend_node_modules:/app/node_modules
@@ -90,8 +89,8 @@ services:
       - backend
     environment:
       - VITE_API_URL=http://localhost:5000
-      - VITE_SUPABASE_URL=${SUPABASE_URL}
-      - VITE_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
     volumes:
       - ./src:/app/src
       - ./public:/app/public
