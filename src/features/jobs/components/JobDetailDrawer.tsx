@@ -95,7 +95,7 @@ const JobDetailDrawer: React.FC<JobDetailDrawerProps> = ({
         setIsLoadingDetails(true);
         try {
           // Use company name directly in API call (SmartRecruiters API needs company name, not ID)
-          const apiUrl = `http://localhost:5000/api/jobs/smartrecruiters/${companyName}/${jobUuid}`;
+          const apiUrl = `/api/jobs/smartrecruiters/${companyName}/${jobUuid}`;
           
           const response = await fetch(apiUrl);
           
