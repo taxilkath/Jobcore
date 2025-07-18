@@ -83,9 +83,8 @@ services:
       - TYPESENSE_PORT=8108
       - TYPESENSE_PROTOCOL=http
       - TYPESENSE_API_KEY=xyz
-      - REDIS_URL=redis://redis:6379
-      - REDIS_PASSWORD=redis123
-      # External services
+      - UPSTASH_REDIS_REST_TOKEN=AYEPAAIjcDE1Y2Q2NjhkYjU0ZTE0NGRhYjdhYTU5ZTNiOWQ3MWE3M3AxMA
+      - UPSTASH_REDIS_REST_URL=https://sure-longhorn-33039.upstash.io
       - SUPABASE_URL=${VITE_SUPABASE_URL}
       - SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}

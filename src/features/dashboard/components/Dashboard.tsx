@@ -644,7 +644,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
 
                             try {
                               // Mark job as applied in the database
-                              await markJobAsAppliedAPI(job.jobId);
+                              // await markJobAsAppliedAPI(job.jobId);
 
                               // Remove from saved jobs list
                               setSavedJobs(prev => prev.filter(savedJob => savedJob.jobId !== job.jobId));
@@ -1011,10 +1011,15 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
         uppy={uppy}
         open={isUploadModalOpen}
         onRequestClose={() => setUploadModalOpen(false)}
-        theme='dark'
+        theme="dark"
         proudlyDisplayPoweredByUppy={false}
-        note="Please upload your resume in PDF, DOC, or DOCX format."
+        note="Upload your resume in PDF, DOC, or DOCX format. Max size: 10MB."
         closeModalOnClickOutside={true}
+        showProgressDetails={true}
+        hideUploadButton={false}
+        hidePauseResumeButton={true}
+        hideCancelButton={false}
+        hideRetryButton={false}
       />
       <ConfirmModal
         isOpen={isDeleteModalOpen}
