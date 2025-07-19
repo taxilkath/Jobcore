@@ -642,19 +642,19 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
                             // External job with apply URL - open directly
                             window.open(applyUrl, '_blank', 'noopener,noreferrer');
 
-                            try {
-                              // Mark job as applied in the database
-                              // await markJobAsAppliedAPI(job.jobId);
+                            // try {
+                            //   // Mark job as applied in the database
+                            //   // await markJobAsAppliedAPI(job.jobId);
 
-                              // Remove from saved jobs list
-                              setSavedJobs(prev => prev.filter(savedJob => savedJob.jobId !== job.jobId));
+                            //   // Remove from saved jobs list
+                            //   setSavedJobs(prev => prev.filter(savedJob => savedJob.jobId !== job.jobId));
 
-                              // Refresh applied jobs list
-                              const updatedAppliedJobs = await getAppliedJobsFromAPI();
-                              setAppliedJobs(updatedAppliedJobs);
-                            } catch (error) {
-                              console.error('Failed to mark job as applied:', error);
-                            }
+                            //   // Refresh applied jobs list
+                            //   const updatedAppliedJobs = await getAppliedJobsFromAPI();
+                            //   setAppliedJobs(updatedAppliedJobs);
+                            // } catch (error) {
+                            //   console.error('Failed to mark job as applied:', error);
+                            // }
                           } else {
                             // Apply with AI button - no action for now
                             console.log('Apply with AI clicked - no action implemented yet');
