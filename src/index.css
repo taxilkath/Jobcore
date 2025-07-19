@@ -822,3 +822,90 @@ nav, .nav-active, a[role="button"],
   max-height: none !important;
   overflow: visible !important;
 }
+
+/* Uppy Modal Styling */
+.uppy-Dashboard-inner {
+  background: #1a1d1e !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 16px !important;
+}
+
+.uppy-Dashboard-AddFiles {
+  border: 2px dashed rgba(255, 255, 255, 0.2) !important;
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+  transition: all 0.3s ease !important;
+}
+
+.uppy-Dashboard-AddFiles:hover {
+  border-color: #10b981 !important;
+  background: rgba(16, 185, 129, 0.05) !important;
+}
+
+.uppy-Dashboard-browse {
+  color: #10b981 !important;
+  font-weight: 500 !important;
+}
+
+.uppy-Dashboard-browse:hover {
+  color: #34d399 !important;
+}
+
+.uppy-Dashboard-dropFilesTitle {
+  color: #f3f4f6 !important;
+  font-weight: 500 !important;
+}
+
+.uppy-Dashboard-note {
+  color: #9ca3af !important;
+}
+
+.uppy-Dashboard-Item {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 8px !important;
+}
+
+.uppy-StatusBar {
+  background: #1a1d1e !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.uppy-StatusBar-actionBtn--upload {
+  background: #10b981 !important;
+  border-radius: 8px !important;
+}
+
+.uppy-StatusBar-actionBtn--upload:hover {
+  background: #059669 !important;
+}
+
+/* Progress bar */
+.uppy-StatusBar-progress {
+  background: #10b981 !important;
+}
+
+/* File preview */
+.uppy-Dashboard-Item-previewIcon {
+  background: rgba(255, 255, 255, 0.02) !important;
+  color: #10b981 !important;
+}
+
+/* Modal overlay */
+.uppy-Dashboard-overlay {
+  background-color: rgba(0, 0, 0, 0.75) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+/* Close button */
+.uppy-DashboardModal-close {
+  color: #9ca3af !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 50% !important;
+  padding: 8px !important;
+}
+
+.uppy-DashboardModal-close:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: #f3f4f6 !important;
+}

@@ -1013,13 +1013,19 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateHome }) => {
         onRequestClose={() => setUploadModalOpen(false)}
         theme="dark"
         proudlyDisplayPoweredByUppy={false}
-        note="Upload your resume in PDF, DOC, or DOCX format. Max size: 10MB."
+        note="✨ Upload your resume in PDF, DOC, or DOCX format"
         closeModalOnClickOutside={true}
         showProgressDetails={true}
         hideUploadButton={false}
         hidePauseResumeButton={true}
         hideCancelButton={false}
         hideRetryButton={false}
+        animateOpenClose={true}
+        closeAfterFinish={true}
+        showSelectedFiles={true}
+        showLinkToFileUploadResult={false}
+        disablePageScrollWhenModalOpen={true}
+        disabled={false}
       />
       <ConfirmModal
         isOpen={isDeleteModalOpen}
