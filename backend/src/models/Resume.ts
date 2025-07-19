@@ -23,4 +23,4 @@ const ResumeSchema: Schema = new Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-export default mongoose.model<IResume>('Resume', ResumeSchema);
+export default mongoose.models.Resume || mongoose.model<IResume>('Resume', ResumeSchema);

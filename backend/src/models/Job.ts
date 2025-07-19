@@ -31,4 +31,4 @@ const JobSchema: Schema = new Schema({
   external: { type: Boolean, default: false }, // Whether this job is from an external source
 });
 
-export default mongoose.model<IJob>('Job', JobSchema); 
+export default mongoose.models.Job || mongoose.model<IJob>('Job', JobSchema);

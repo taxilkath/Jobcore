@@ -13,4 +13,4 @@ const JobPortalSchema: Schema = new Schema({
   companies: [{ type: Schema.Types.ObjectId, ref: 'Company' }],
 });
 
-export default mongoose.model<IJobPortal>('JobPortal', JobPortalSchema); 
+export default mongoose.models.JobPortal || mongoose.model<IJobPortal>('JobPortal', JobPortalSchema);

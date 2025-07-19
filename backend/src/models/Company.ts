@@ -18,4 +18,4 @@ const CompanySchema: Schema = new Schema({
   posting_count: { type: Number, default: 0 }, // Cached job count from external APIs
 });
 
-export default mongoose.model<ICompany>('Company', CompanySchema); 
+export default mongoose.models.Company || mongoose.model<ICompany>('Company', CompanySchema);

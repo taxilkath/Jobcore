@@ -29,4 +29,4 @@ const UserJobSchema: Schema = new Schema({
 // Create compound index to prevent duplicate saves
 UserJobSchema.index({ userId: 1, jobId: 1 }, { unique: true });
 
-export default mongoose.model<IUserJob>('UserJob', UserJobSchema); 
+export default mongoose.models.UserJob || mongoose.model<IUserJob>('UserJob', UserJobSchema);
