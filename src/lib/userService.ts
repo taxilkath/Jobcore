@@ -1,6 +1,9 @@
 // Simple user service for managing user ID and saved jobs
 // In a real app, this would integrate with authentication
 
+// Get server URL from environment variable
+const SERVER_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 // Generate or retrieve user ID
 export const getUserId = (): string => {
   let userId = localStorage.getItem('userId');
@@ -23,7 +26,7 @@ export const saveJobToAPI = async (jobData: {
 }) => {
   const userId = getUserId();
   try {
-    const response = await fetch('/api/user-jobs/save', {
+    const response = await fetch(`${SERVER_URL}/api/user-jobs/save`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -52,7 +55,7 @@ export const getSavedJobsFromAPI = async () => {
   const userId = getUserId();
   
   try {
-    const response = await fetch(`/api/user-jobs/user/${userId}`);
+    const response = await fetch(`${SERVER_URL}/api/user-jobs/user/${userId}`);
     
     if (!response.ok) {
       throw new Error('Failed to fetch saved jobs');
@@ -110,7 +113,7 @@ export const getSavedJobsWithDetailsFromAPI = async () => {
   const userId = getUserId();
   
   try {
-    const response = await fetch(`/api/user-jobs/user/${userId}/details`);
+    const response = await fetch(`${SERVER_URL}/api/user-jobs/user/${userId}/details`);
     
     if (!response.ok) {
       throw new Error('Failed to fetch saved jobs with details');
@@ -129,7 +132,7 @@ export const removeSavedJobFromAPI = async (jobId: string) => {
   const userId = getUserId();
   
   try {
-    const response = await fetch(`/api/user-jobs/user/${userId}/job/${jobId}`, {
+    const response = await fetch(`${SERVER_URL}/api/user-jobs/user/${userId}/job/${jobId}`, {
       method: 'DELETE'
     });
 
@@ -150,7 +153,7 @@ export const getAppliedJobsFromAPI = async () => {
   const userId = getUserId();
   
   try {
-    const response = await fetch(`/api/user-jobs/user/${userId}/applied`);
+    const response = await fetch(`${SERVER_URL}/api/user-jobs/user/${userId}/applied`);
     
     if (!response.ok) {
       throw new Error('Failed to fetch applied jobs');
@@ -169,7 +172,7 @@ export const markJobAsAppliedAPI = async (jobId: string) => {
   const userId = getUserId();
   
   try {
-    const response = await fetch(`/api/user-jobs/user/${userId}/job/${jobId}/apply`, {
+    const response = await fetch(`${SERVER_URL}/api/user-jobs/user/${userId}/job/${jobId}/apply`, {
       method: 'PUT'
     });
 
@@ -190,7 +193,7 @@ export const checkIfJobSavedAPI = async (jobId: string) => {
   const userId = getUserId();
   
   try {
-    const response = await fetch(`/api/user-jobs/user/${userId}/job/${jobId}/check`);
+    const response = await fetch(`${SERVER_URL}/api/user-jobs/user/${userId}/job/${jobId}/check`);
     
     if (!response.ok) {
       throw new Error('Failed to check if job is saved');

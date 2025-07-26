@@ -7,6 +7,9 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { searchJobs } from '../../../lib/typesense';
 import { getSavedJobIds, registerSavedJobUpdateCallback } from '../../../lib/userService';
 
+// Get server URL from environment variable
+const SERVER_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 const JobsPage: React.FC = () => {
   const { user } = useAuth();
   const [urlSearchParams] = useSearchParams();
@@ -96,7 +99,7 @@ const JobsPage: React.FC = () => {
       }
       
       const startTime = performance.now();
-      const response = await fetch(`/api/jobs?${params.toString()}`);
+      const response = await fetch(`${SERVER_URL}/api/jobs?${params.toString()}`);
       const data = await response.json();
       const endTime = performance.now();
       const searchTime = Math.round(endTime - startTime);

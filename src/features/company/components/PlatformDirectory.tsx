@@ -6,6 +6,9 @@ import { InteractiveHoverButton } from '../../../components/ui/interactive-hover
 import { SaveButton } from '../../../components/ui/save-button';
 import { saveJobToAPIWithCallback, markJobAsAppliedAPI, getSavedJobIds, registerSavedJobUpdateCallback } from '../../../lib/userService';
 
+// Get server URL from environment variable
+const SERVER_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 interface Portal {
   name: string;
   jobCount: number;
@@ -82,7 +85,7 @@ const PlatformDirectory: React.FC = () => {
     const fetchPortals = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/jobs/portals');
+        const response = await fetch(`${SERVER_URL}/api/jobs/portals`);
         if (!response.ok) {
           throw new Error('Failed to fetch portals');
         }
@@ -106,7 +109,7 @@ const PlatformDirectory: React.FC = () => {
       if (page === 1) setLoading(true);
       else setLoadingMore(true);
 
-      const response = await fetch(`/api/jobs/portals/${portalName}/companies?page=${page}&limit=10`);
+      const response = await fetch(`${SERVER_URL}/api/jobs/portals/${portalName}/companies?page=${page}&limit=10`);
       if (!response.ok) {
         throw new Error(`Failed to fetch companies for ${portalName}`);
       }
@@ -141,7 +144,7 @@ const PlatformDirectory: React.FC = () => {
         setJobSearchTerm('');
       }
       
-      let url = `/api/jobs/companies/${company._id}/external-jobs`;
+      let url = `${SERVER_URL}/api/jobs/companies/${company._id}/external-jobs`;
       if (pageToken) {
         // Check if this looks like a SmartRecruiters offset (numeric) or Workable token
         if (/^\d+$/.test(pageToken)) {

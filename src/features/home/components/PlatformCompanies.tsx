@@ -2,6 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Search, ChevronRight, Building, Users, MapPin, ArrowLeft, SortAsc, LayoutGrid, List, ChevronLeft, Loader2, X } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 
+// Get server URL from environment variable
+const SERVER_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 interface Company {
   id: string;
   name: string;
@@ -124,7 +127,7 @@ const PlatformCompanies: React.FC = () => {
     }
     
     try {
-      const response = await fetch(`/api/jobs/portals/${encodeURIComponent(platformId)}/companies?page=${page}&limit=20`);
+      const response = await fetch(`${SERVER_URL}/api/jobs/portals/${encodeURIComponent(platformId)}/companies?page=${page}&limit=20`);
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error(`Portal "${platformId}" not found`);
