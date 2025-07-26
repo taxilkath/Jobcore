@@ -3,7 +3,7 @@ import { Search, ChevronRight, Building, Users, MapPin, ArrowLeft, SortAsc, Layo
 import { useParams, useNavigate } from 'react-router-dom';
 
 // Get server URL from environment variable
-const SERVER_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const SERVER_URL = import.meta.env.VITE_API_URL || '';
 
 interface Company {
   id: string;
@@ -127,14 +127,19 @@ const PlatformCompanies: React.FC = () => {
     }
     
     try {
+      console.log('Fetching companies from:', `${SERVER_URL}/api/jobs/portals/${encodeURIComponent(platformId)}/companies?page=${page}&limit=20`);
       const response = await fetch(`${SERVER_URL}/api/jobs/portals/${encodeURIComponent(platformId)}/companies?page=${page}&limit=20`);
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+      
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error(`Portal "${platformId}" not found`);
         }
-        throw new Error('Failed to fetch companies');
+        throw new Error(`Failed to fetch companies: ${response.status} ${response.statusText}`);
       }
       const data = await response.json();
+      console.log('Companies data received:', data);
       const newCompanies = Array.isArray(data.companies) ? data.companies : [];
       
       if (append) {

@@ -7,7 +7,7 @@ import { SaveButton } from '../../../components/ui/save-button';
 import { saveJobToAPIWithCallback, markJobAsAppliedAPI, getSavedJobIds, registerSavedJobUpdateCallback } from '../../../lib/userService';
 
 // Get server URL from environment variable
-const SERVER_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const SERVER_URL = import.meta.env.VITE_API_URL || '';
 
 interface Portal {
   name: string;
@@ -85,15 +85,26 @@ const PlatformDirectory: React.FC = () => {
     const fetchPortals = async () => {
       try {
         setLoading(true);
+        console.log('Fetching portals from:', `${SERVER_URL}/api/jobs/portals`);
         const response = await fetch(`${SERVER_URL}/api/jobs/portals`);
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        
         if (!response.ok) {
-          throw new Error('Failed to fetch portals');
+          throw new Error(`Failed to fetch portals: ${response.status} ${response.statusText}`);
         }
+        
         const data = await response.json();
+        console.log('Portals data received:', data);
         const filteredData = data.filter((p: Portal) => p.name);
+        console.log('Filtered portals:', filteredData);
         setPortals(filteredData);
       } catch (error) {
         console.error("Error fetching portals:", error);
+        console.error("Error details:", {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined
+        });
       } finally {
         setLoading(false);
       }
