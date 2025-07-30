@@ -3,7 +3,7 @@ import { Search, ChevronRight, Building, Users, MapPin, ArrowLeft, SortAsc, Layo
 import { useParams, useNavigate } from 'react-router-dom';
 
 // Get server URL from environment variable
-const SERVER_URL =  '';
+const SERVER_URL = '/api/proxy';
 
 interface Company {
   id: string;

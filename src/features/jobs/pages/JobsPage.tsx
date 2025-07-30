@@ -7,7 +7,7 @@ import JobListings from '../components/JobListings';
 import SearchSection from '../components/SearchSection';
 
 // Get server URL from environment variable
-const SERVER_URL = '';
+const SERVER_URL = '/api/proxy';
 
 const JobsPage: React.FC = () => {
   const { user } = useAuth();

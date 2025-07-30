@@ -2,7 +2,7 @@
 // In a real app, this would integrate with authentication
 
 // Get server URL from environment variable
-const SERVER_URL = '';
+const SERVER_URL = '/api/proxy';
 
 // Generate or retrieve user ID
 export const getUserId = (): string => {

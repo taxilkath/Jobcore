@@ -1,30 +1,33 @@
 // File: api/proxy/[...path].ts
-
 export const config = {
     runtime: 'edge',
   };
   
   export default async function handler(req: Request) {
+    // Get the backend URL from the Vercel environment variable
     const backendApiUrl = process.env.BACKEND_API_URL;
   
     if (!backendApiUrl) {
-      return new Response('Backend API URL is not configured.', { status: 500 });
+      return new Response('Server configuration error: Backend API URL not set.', { status: 500 });
     }
   
-    // Create a new URL object from the incoming request
+    // Create a URL object from the incoming request to easily manipulate it
     const requestUrl = new URL(req.url);
   
-    // Get the path from the URL (e.g., /api/proxy/jobs)
+    // Extract the path after '/api/proxy'
     const path = requestUrl.pathname.replace('/api/proxy', '');
   
-    // Construct the full destination URL
-    const destination = `${backendApiUrl}${path}${requestUrl.search}`;
+    // Construct the full destination URL for your backend
+    const destinationUrl = `${backendApiUrl}${path}${requestUrl.search}`;
   
-    // Forward the request to your backend
-    return fetch(destination, {
+    // Create a new request to forward to the destination
+    const forwardedRequest = new Request(destinationUrl, {
       method: req.method,
       headers: req.headers,
       body: req.body,
       redirect: 'follow',
     });
+  
+    // Make the request and return the response
+    return fetch(forwardedRequest);
   }
