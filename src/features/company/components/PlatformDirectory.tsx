@@ -7,7 +7,7 @@ import { SaveButton } from '../../../components/ui/save-button';
 import { saveJobToAPIWithCallback, markJobAsAppliedAPI, getSavedJobIds, registerSavedJobUpdateCallback } from '../../../lib/userService';
 
 // Get server URL from environment variable
-const SERVER_URL = import.meta.env.VITE_API_URL || '';
+const SERVER_URL = import.meta.env.BACKEND_API_URL || '';
 
 interface Portal {
   name: string;

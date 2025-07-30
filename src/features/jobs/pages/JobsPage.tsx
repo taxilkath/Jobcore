@@ -1,14 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import SearchSection from '../components/SearchSection';
+import { useAuth } from '../../../contexts/AuthContext';
+import { getSavedJobIds, registerSavedJobUpdateCallback } from '../../../lib/userService';
 import FilterSidebar from '../components/FilterSidebar';
 import JobListings from '../components/JobListings';
-import { useAuth } from '../../../contexts/AuthContext';
-import { searchJobs } from '../../../lib/typesense';
-import { getSavedJobIds, registerSavedJobUpdateCallback } from '../../../lib/userService';
+import SearchSection from '../components/SearchSection';
 
 // Get server URL from environment variable
-const SERVER_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const SERVER_URL = '';
 
 const JobsPage: React.FC = () => {
   const { user } = useAuth();
